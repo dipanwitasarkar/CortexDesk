@@ -139,9 +139,15 @@ class QdrantManager:
         if not self.client:
             self.connect()
         
+        # Convert string IDs to integer IDs using the same logic as insert_points
+        import hashlib
+        integer_ids = [int(hashlib.md5(point_id.encode()).hexdigest()[:8], 16) for point_id in point_ids]
+        
+        logger.info(f"Deleting points from {collection_name}: {point_ids} -> {integer_ids}")
+        
         self.client.delete(
             collection_name=collection_name,
-            points_selector=point_ids
+            points_selector=integer_ids
         )
 
     async def get_collection_info(self, collection_name: str) -> Dict[str, Any]:

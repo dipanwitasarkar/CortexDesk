@@ -7,7 +7,7 @@ from app.core.database import get_async_db
 from app.models.document import Document, DocumentType
 from app.services.llm_service import llm_service
 from app.core.qdrant import qdrant_manager
-from sqlalchemy import select
+from sqlalchemy import select, delete
 import re
 
 
@@ -270,10 +270,6 @@ class DocumentService:
                 self.logger.warning(f"Failed to delete embeddings: {e}")
             
             # Delete document from database
-            await db.execute(
-                select(Document).where(Document.id == document_id)
-            )
-            from sqlalchemy import delete
             await db.execute(delete(Document).where(Document.id == document_id))
             await db.commit()
             
