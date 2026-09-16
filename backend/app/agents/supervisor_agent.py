@@ -1,5 +1,6 @@
 from app.agents.base_agent import BaseAgent
 from app.services.observability_db import observability_db
+from app.services.llm_service import llm_service
 from typing import Dict, Any, List, Optional
 import json
 import uuid
@@ -348,7 +349,11 @@ Be concise and clear in your planning and coordination."""
             # Single agent result
             result = agent_results[0]
             if result["success"]:
-                return result.get("result", {}).get("response", "No response from agent")
+                response = result.get("result", {}).get("response", "No response from agent")
+                # If response is too short, provide helpful message
+                if not response or len(response.strip()) < 10:
+                    return f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
+                return response
             else:
                 return f"Error from {result['agent']}: {result.get('error', 'Unknown error')}"
         
@@ -381,4 +386,22 @@ Agent results:
 Generate a clear, helpful response that combines the relevant information from all agents."""
 
         messages = [{"role": "user", "content": merge_prompt}]
-        return await self.call_llm(messages, temperature=0.5)
+        merged_response = await self.call_llm(messages, temperature=0.5)
+        
+        # If merged response is too short, provide helpful message
+        if not merged_response or len(merged_response.strip()) < 10:
+            return f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
+        
+        return merged_response
+
+    async def call_llm(
+        self,
+        messages: List[Dict[str, str]],
+        temperature: Optional[float] = None
+    ) -> str:
+        """Call LLM directly (override base agent method)"""
+        return await llm_service.generate_simple_response(
+            message=messages[-1]["content"],
+            context={},
+            chat_history=[]
+        )

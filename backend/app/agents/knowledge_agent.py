@@ -66,13 +66,15 @@ Be thorough in your search and provide well-sourced, accurate information."""
             
             # Use LLM to generate a response
             try:
-                print(f"[DEBUG] Knowledge agent calling LLM with prompt: {context_prompt[:100]}...")
                 response = await llm_service.generate_simple_response(
                     message=context_prompt,
                     context=context,
                     chat_history=[]
                 )
-                print(f"[DEBUG] Knowledge agent got LLM response: {response[:100]}...")
+                
+                # If response is too short or empty, provide a helpful message
+                if not response or len(response.strip()) < 10:
+                    response = f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
                 
                 return {
                     "success": True,
@@ -84,7 +86,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
                     }
                 }
             except Exception as llm_error:
-                print(f"[DEBUG] Knowledge agent LLM failed: {str(llm_error)}")
                 # Fallback if LLM fails
                 return {
                     "success": True,
@@ -97,7 +98,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
                 }
                 
         except Exception as e:
-            print(f"[DEBUG] Knowledge agent failed: {str(e)}")
             # Fallback response if anything fails
             return {
                 "success": True,

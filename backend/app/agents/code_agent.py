@@ -292,6 +292,10 @@ Provide a clear, helpful response with code examples if relevant."""
                 chat_history=[]
             )
             
+            # If response is too short or empty, provide a helpful message
+            if not response or len(response.strip()) < 10:
+                response = f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful code responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
+            
             return {
                 "response": response
             }
