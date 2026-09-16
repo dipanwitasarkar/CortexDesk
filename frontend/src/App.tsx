@@ -8,6 +8,7 @@ import { ToastProvider } from './components/ToastContainer'
 import { Chat } from './types'
 import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug } from 'lucide-react'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useAccessibility } from './hooks/useAccessibility'
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([])
@@ -107,8 +108,21 @@ function App() {
     }
   ])
 
+  // Accessibility features
+  const { announceToScreenReader } = useAccessibility()
+
+  // Announce important events to screen readers
+  useEffect(() => {
+    if (currentChat) {
+      announceToScreenReader(`Opened chat: ${currentChat.title}`)
+    }
+  }, [currentChat, announceToScreenReader])
+
   return (
     <ToastProvider>
+      <a href="#main-content" className="skip-to-content">
+        Skip to main content
+      </a>
       <div className="flex h-screen bg-gray-900">
       {/* Sidebar */}
       {sidebarOpen && (
@@ -124,7 +138,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div id="main-content" className="flex-1 flex flex-col" role="main">
         {/* Header */}
         <header className="bg-gray-800 border-b border-gray-700 p-4">
           <div className="flex items-center justify-between">

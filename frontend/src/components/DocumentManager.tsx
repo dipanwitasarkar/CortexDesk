@@ -213,6 +213,8 @@ const DocumentManager: React.FC = () => {
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
+      role="region"
+      aria-label="Document Manager"
     >
       {dragActive && (
         <div className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-10">
@@ -322,36 +324,46 @@ const DocumentManager: React.FC = () => {
 
       {/* Upload Modal */}
       {showUpload && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="upload-modal-title"
+        >
           <div className="bg-gray-800 rounded-lg max-w-lg w-full border border-gray-700">
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
-              <h3 className="text-lg font-semibold">Add Document</h3>
+              <h3 id="upload-modal-title" className="text-lg font-semibold">Add Document</h3>
               <button
                 onClick={() => setShowUpload(false)}
                 className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label="Close upload modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
+                <label htmlFor="document-title" className="block text-sm font-medium text-gray-300 mb-2">Title</label>
                 <input
+                  id="document-title"
                   type="text"
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="Document title"
                   className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  aria-required="true"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Content</label>
+                <label htmlFor="document-content" className="block text-sm font-medium text-gray-300 mb-2">Content</label>
                 <textarea
+                  id="document-content"
                   value={uploadContent}
                   onChange={(e) => setUploadContent(e.target.value)}
                   placeholder="Document content (text, notes, etc.)"
                   rows={6}
                   className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+                  aria-required="true"
                 />
               </div>
               {uploadProgress > 0 && (
