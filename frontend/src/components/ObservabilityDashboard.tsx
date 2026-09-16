@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap, DatabaseZap, Filter, X } from 'lucide-react'
+import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap, DatabaseZap, Filter, X, Trash2, Calendar } from 'lucide-react'
 import { useToast } from './ToastContainer'
 
 interface PerformanceData {
@@ -101,6 +101,9 @@ const ObservabilityDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [logFilter, setLogFilter] = useState('')
   const [traceFilter, setTraceFilter] = useState('')
+  const [showPurgeModal, setShowPurgeModal] = useState(false)
+  const [purgeType, setPurgeType] = useState<'logs' | 'traces' | 'metrics' | 'all'>('logs')
+  const [purgeDays, setPurgeDays] = useState(7)
   const { success, error } = useToast()
 
   const formatBytes = (bytes: number) => {
@@ -172,6 +175,64 @@ const ObservabilityDashboard: React.FC = () => {
     }
   }
 
+  const handlePurge = async () => {
+    try {
+      setLoading(true)
+      let endpoint = ''
+      let body = {}
+
+      if (purgeType === 'logs') {
+        endpoint = '/api/v1/observability/logs'
+        body = { before_days: purgeDays }
+      } else if (purgeType === 'traces') {
+        endpoint = '/api/v1/observability/traces'
+        body = { before_days: purgeDays }
+      } else if (purgeType === 'metrics') {
+        endpoint = '/api/v1/observability/metrics'
+        body = { before_days: purgeDays }
+      } else if (purgeType === 'all') {
+        // Purge all three
+        await Promise.all([
+          fetch('/api/v1/observability/logs', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ before_days: purgeDays })
+          }),
+          fetch('/api/v1/observability/traces', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ before_days: purgeDays })
+          }),
+          fetch('/api/v1/observability/metrics', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ before_days: purgeDays })
+          })
+        ])
+        success(`Purged all observability data older than ${purgeDays} days`)
+        setShowPurgeModal(false)
+        await fetchData()
+        return
+      }
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const result = await response.json()
+      success(`Purged ${purgeType} older than ${purgeDays} days: ${result.deleted_count} records`)
+      setShowPurgeModal(false)
+      await fetchData()
+    } catch (err) {
+      console.error('Failed to purge data:', err)
+      error('Failed to purge data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -228,6 +289,13 @@ const ObservabilityDashboard: React.FC = () => {
             title="Refresh"
           >
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+          <button
+            onClick={() => setShowPurgeModal(true)}
+            className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            title="Purge old data"
+          >
+            <Trash2 className="w-5 h-5 text-red-400" />
           </button>
         </div>
       </div>
@@ -751,6 +819,81 @@ const ObservabilityDashboard: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Purge Modal */}
+      {showPurgeModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="purge-modal-title"
+        >
+          <div className="bg-gray-800 rounded-lg max-w-md w-full border border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <h3 id="purge-modal-title" className="text-lg font-semibold">Purge Observability Data</h3>
+              <button
+                onClick={() => setShowPurgeModal(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label="Close purge modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label htmlFor="purge-type" className="block text-sm font-medium text-gray-300 mb-2">Data Type</label>
+                <select
+                  id="purge-type"
+                  value={purgeType}
+                  onChange={(e) => setPurgeType(e.target.value as any)}
+                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="logs">Logs</option>
+                  <option value="traces">Traces</option>
+                  <option value="metrics">Metrics</option>
+                  <option value="all">All Data</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="purge-days" className="block text-sm font-medium text-gray-300 mb-2">Purge data older than (days)</label>
+                <input
+                  id="purge-days"
+                  type="number"
+                  value={purgeDays}
+                  onChange={(e) => setPurgeDays(Number(e.target.value))}
+                  min="1"
+                  max="365"
+                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-yellow-200">
+                    <p className="font-semibold mb-1">Warning</p>
+                    <p>This will permanently delete {purgeType === 'all' ? 'all' : purgeType} data older than {purgeDays} days. This action cannot be undone.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowPurgeModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePurge}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Purging...' : 'Purge'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
