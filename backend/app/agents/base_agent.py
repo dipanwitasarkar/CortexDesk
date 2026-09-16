@@ -100,6 +100,16 @@ class BaseAgent(ABC):
                 status="completed"
             )
             
+            # If result already has success field, return it directly (already wrapped)
+            if isinstance(result, dict) and "success" in result:
+                return {
+                    "success": result.get("success", True),
+                    "agent": self.name,
+                    "result": result,
+                    "execution_time": execution_time,
+                    "request_id": request_id
+                }
+            
             return {
                 "success": True,
                 "agent": self.name,

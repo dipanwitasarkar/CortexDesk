@@ -292,19 +292,10 @@ Provide a clear, helpful response with code examples if relevant."""
                 chat_history=[]
             )
             
-            # If response is too short or empty, provide a helpful message
-            if not response or len(response.strip()) < 10:
-                response = f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful code responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
-            
-            return {
-                "response": response
-            }
+            return {"response": response}
         except Exception as e:
             # Fallback response if LLM fails
-            return {
-                "response": f"I can help with basic code questions about '{user_message}'. Advanced code analysis features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
-                "error": str(e)
-            }
+            return {"response": f"I can help with basic code questions about '{user_message}'. Advanced code analysis features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."}
 
     async def _extract_search_params(self, user_message: str) -> Dict[str, Any]:
         """Extract search parameters from user message"""

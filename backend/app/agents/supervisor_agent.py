@@ -349,7 +349,10 @@ Be concise and clear in your planning and coordination."""
             # Single agent result
             result = agent_results[0]
             if result["success"]:
-                response = result.get("result", {}).get("response", "No response from agent")
+                # The result is wrapped by base agent's execute_with_logging
+                # So result["result"] contains the actual return from process()
+                actual_result = result.get("result", {})
+                response = actual_result.get("response", "No response from agent")
                 # If response is too short, provide helpful message
                 if not response or len(response.strip()) < 10:
                     return f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."

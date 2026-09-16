@@ -72,39 +72,14 @@ Be thorough in your search and provide well-sourced, accurate information."""
                     chat_history=[]
                 )
                 
-                # If response is too short or empty, provide a helpful message
-                if not response or len(response.strip()) < 10:
-                    response = f"I understand you're asking about '{user_message}'. However, the local GPT-2 model I'm currently using is very limited and cannot generate meaningful responses. For better results, please switch to a cloud LLM provider (Groq is free) using the LLM configuration button (Ctrl+L)."
-                
-                return {
-                    "success": True,
-                    "response": response,
-                    "metadata": {
-                        "memories_found": len(memories) if memories else 0,
-                        "llm_used": True
-                    }
-                }
+                return response
             except Exception as llm_error:
                 # Fallback if LLM fails
-                return {
-                    "success": True,
-                    "response": f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
-                    "metadata": {
-                        "error": str(llm_error),
-                        "llm_failed": True
-                    }
-                }
+                return f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."
                 
         except Exception as e:
             # Fallback response if anything fails
-            return {
-                "success": True,
-                "response": f"I can help with basic questions about '{user_message}'. Note: Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
-                "metadata": {
-                    "error": str(e),
-                    "embedding_disabled": True
-                }
-            }
+            return f"I can help with basic questions about '{user_message}'. Note: Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."
 
     async def _classify_task(self, user_message: str, context: Dict[str, Any]) -> str:
         """Classify the type of knowledge task"""
