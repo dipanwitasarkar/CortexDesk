@@ -79,7 +79,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
                 return {
                     "success": True,
                     "response": response,
-                    "agent_used": self.name,
                     "metadata": {
                         "memories_found": len(memories) if memories else 0,
                         "llm_used": True
@@ -90,7 +89,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
                 return {
                     "success": True,
                     "response": f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
-                    "agent_used": self.name,
                     "metadata": {
                         "error": str(llm_error),
                         "llm_failed": True
@@ -102,7 +100,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
             return {
                 "success": True,
                 "response": f"I can help with basic questions about '{user_message}'. Note: Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
-                "agent_used": self.name,
                 "metadata": {
                     "error": str(e),
                     "embedding_disabled": True
