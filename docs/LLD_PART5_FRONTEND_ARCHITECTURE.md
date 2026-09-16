@@ -39,6 +39,7 @@ frontend/
 │   │   ├── ObservabilityDashboard.tsx
 │   │   ├── DocumentManager.tsx
 │   │   ├── MCPManager.tsx
+│   │   ├── LLMManager.tsx
 │   │   ├── Toast.tsx
 │   │   └── ToastContainer.tsx
 │   ├── hooks/
@@ -88,6 +89,11 @@ App (Main Application)
 ├── MCPManager (Modal)
 │   ├── Integration List
 │   ├── Add Integration Form
+│   └── Test Connection Button
+├── LLMManager (Modal)
+│   ├── Configuration List
+│   ├── Add Configuration Form
+│   ├── Provider Selection
 │   └── Test Connection Button
 ├── About Modal
 │   ├── System Overview
@@ -1093,6 +1099,7 @@ useKeyboardShortcuts({
   'Ctrl+D': () => setShowDocuments(!showDocuments),
   'Ctrl+O': () => setShowObservability(!showObservability),
   'Ctrl+M': () => setShowMCP(!showMCP),
+  'Ctrl+L': () => setShowLLM(!showLLM),
   '?': () => setShowAbout(true),
   'Escape': () => closeAllModals()
 });
@@ -1828,6 +1835,51 @@ server {
   }
 }
 ```
+
+---
+
+### 2.7 LLMManager Component
+
+**File:** `frontend/src/components/LLMManager.tsx`
+
+**Purpose:** LLM provider configuration management with dynamic switching capability.
+
+**State:**
+```typescript
+interface LLMManagerState {
+  configurations: LLMConfiguration[];
+  availableProviders: LLMProvider[];
+  loading: boolean;
+  showAddForm: boolean;
+  selectedProvider: string;
+  config: {
+    model_name: string;
+    endpoint: string;
+    api_key: string;
+    temperature: number;
+    max_tokens: number;
+  };
+  testing: boolean;
+}
+```
+
+**Key Features:**
+- Configuration list with active status
+- Add new LLM configuration
+- Delete configuration
+- Activate configuration
+- Test configuration
+- Provider selection with dynamic form fields
+- Status indicators for active configuration
+
+**Supported Providers:**
+- Local (GPT-2)
+- Groq (llama2-70b, mixtral-8x7b)
+- RunPod (custom)
+- OpenAI (gpt-4, gpt-3.5)
+- Anthropic (claude-3-opus, claude-3-sonnet)
+- Azure OpenAI (gpt-4)
+- Custom (any OpenAI-compatible endpoint)
 
 ---
 

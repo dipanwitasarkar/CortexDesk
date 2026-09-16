@@ -67,7 +67,7 @@ This document provides detailed specifications for deployment strategies, infras
 - CPU: 4 cores minimum
 - RAM: 8GB minimum, 16GB recommended
 - Storage: 20GB free space
-- GPU: Optional (for local LLM acceleration)
+- GPU: Optional (for local LLM acceleration or cloud LLM providers)
 
 ### 2.2 Local Development Setup
 
@@ -1273,6 +1273,9 @@ curl -X GET "http://localhost:6333/collections/documents/snapshots/{snapshot_id}
 - Model serving with SageMaker
 - Feature store for ML features
 - ML pipeline with Kubeflow
+- Dynamic LLM provider configuration (local, Groq, RunPod, OpenAI, Anthropic, Azure, Custom)
+- Per-user LLM configuration stored in database
+- UI-based provider switching without backend restart
 
 **Observability:**
 - Distributed tracing with Jaeger

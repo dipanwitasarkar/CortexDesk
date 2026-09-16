@@ -45,7 +45,9 @@ Result Merging & Response Generation
 
 **LLM Integration:**
 - Local: GPT-2 (124M parameters)
-- Cloud: Groq, RunPod, OpenAI (future)
+- Cloud: Groq, RunPod, OpenAI, Anthropic, Azure, Custom (configurable via UI)
+- Dynamic configuration switching without backend restart
+- Per-user configuration stored in database
 
 **Embedding Model:**
 - sentence-transformers/all-MiniLM-L6-v2 (384 dimensions)
