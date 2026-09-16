@@ -113,7 +113,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-4">Welcome to Windows AI Assistant</h2>
+          <h2 className="text-2xl font-semibold mb-4">Welcome to CortexDesk</h2>
           <p className="text-gray-400 mb-6">Start a new conversation to get started</p>
           <button
             onClick={onNewChat}

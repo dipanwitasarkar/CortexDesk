@@ -97,7 +97,7 @@ function App() {
                   </svg>
                 </button>
               )}
-              <h1 className="text-xl font-semibold">Windows AI Assistant</h1>
+              <h1 className="text-xl font-semibold">CortexDesk</h1>
             </div>
             <div className="flex items-center gap-4">
               <button
@@ -157,7 +157,7 @@ function App() {
             <div className="flex items-center justify-between p-6 border-b border-gray-700">
               <div className="flex items-center gap-3">
                 <Info className="w-6 h-6 text-blue-400" />
-                <h2 className="text-xl font-bold">About Windows AI Assistant</h2>
+                <h2 className="text-xl font-bold">About CortexDesk</h2>
               </div>
               <button
                 onClick={() => setShowAbout(false)}
@@ -177,12 +177,13 @@ function App() {
                 </h3>
                 <div className="bg-gray-900 rounded p-4 text-sm text-gray-300">
                   <p className="mb-3">
-                    Windows AI Assistant is a multi-agent AI system designed to help you with various tasks 
+                    CortexDesk is a multi-agent AI system designed to help you with various tasks 
                     including code assistance, knowledge retrieval, productivity management, and Windows automation.
                   </p>
                   <p>
-                    The system uses a local LLM (currently gpt2) for text generation and integrates with 
-                    PostgreSQL for persistent storage, Redis for caching, and Qdrant for vector search.
+                    The system uses local models for complete offline capability: GPT-2 for text generation 
+                    and sentence-transformers/all-MiniLM-L6-v2 for embeddings, with PostgreSQL for persistent storage, 
+                    Redis for runtime state, and Qdrant v1.12.0 for vector search and RAG.
                   </p>
                 </div>
               </div>
@@ -209,12 +210,13 @@ function App() {
                     <div>
                       <h4 className="font-semibold text-green-400 mb-2">Infrastructure</h4>
                       <ul className="space-y-1 text-gray-400">
-                        <li>• <span className="text-white">PostgreSQL</span> - Persistent database</li>
-                        <li>• <span className="text-white">Redis</span> - Cache layer</li>
-                        <li>• <span className="text-white">Qdrant</span> - Vector database</li>
+                        <li>• <span className="text-white">PostgreSQL</span> - Business data + observability</li>
+                        <li>• <span className="text-white">Redis</span> - Runtime state (2GB, allkeys-lru)</li>
+                        <li>• <span className="text-white">Qdrant v1.12.0</span> - Vector database</li>
                         <li>• <span className="text-white">FastAPI</span> - Backend API</li>
                         <li>• <span className="text-white">React</span> - Frontend UI</li>
-                        <li>• <span className="text-white">gpt2</span> - Local LLM</li>
+                        <li>• <span className="text-white">GPT-2</span> - Local generation</li>
+                        <li>• <span className="text-white">sentence-transformers</span> - Local embeddings</li>
                       </ul>
                     </div>
                   </div>
@@ -230,12 +232,14 @@ function App() {
                 <div className="bg-gray-900 rounded p-4 text-sm text-gray-300">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-semibold text-purple-400 mb-2">LLM Configuration</h4>
+                      <h4 className="font-semibold text-purple-400 mb-2">AI Models</h4>
                       <ul className="space-y-1 text-gray-400">
-                        <li>• <span className="text-white">Model:</span> gpt2 (124M parameters)</li>
-                        <li>• <span className="text-white">Location:</span> Local (cached)</li>
+                        <li>• <span className="text-white">Generation:</span> GPT-2 (124M parameters)</li>
+                        <li>• <span className="text-white">Embeddings:</span> sentence-transformers/all-MiniLM-L6-v2</li>
+                        <li>• <span className="text-white">Location:</span> 100% local</li>
                         <li>• <span className="text-white">Cost:</span> Free</li>
-                        <li>• <span className="text-white">Privacy:</span> 100% local</li>
+                        <li>• <span className="text-white">Privacy:</span> Complete offline capability</li>
+                        <li>• <span className="text-white">RAG:</span> Full semantic search support</li>
                       </ul>
                     </div>
                     <div>

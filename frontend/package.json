@@ -1,7 +1,7 @@
 {
-  "name": "windows-ai-assistant-frontend",
+  "name": "cortezdesk-frontend",
   "version": "1.0.0",
-  "description": "Windows AI Assistant Frontend",
+  "description": "CortexDesk Frontend",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
@@ -42,7 +42,7 @@
   },
   "build": {
     "appId": "com.windowsai.assistant",
-    "productName": "Windows AI Assistant",
+    "productName": "CortexDesk",
     "directories": {
       "output": "dist"
     },
