@@ -418,3 +418,5 @@ export function LLMManager({ onClose }: LLMManagerProps) {
     </div>
   )
 }
+
+export default LLMManager
