@@ -2,6 +2,7 @@ import logging
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import json
+import os
 from datetime import datetime
 from app.core.database import get_async_db
 from app.models.document import Document, DocumentType
@@ -297,6 +298,99 @@ class DocumentService:
         await self.process_document(document_id, text_content)
         
         return document_id
+    
+    async def extract_text_from_file(self, file_path: str, filename: str) -> str:
+        """Extract text from document files (PDF, DOCX, PPTX)"""
+        ext = os.path.splitext(filename)[1].lower()
+        
+        try:
+            if ext == '.pdf':
+                return await self._extract_from_pdf(file_path)
+            elif ext in ['.docx', '.doc']:
+                return await self._extract_from_docx(file_path)
+            elif ext in ['.pptx', '.ppt']:
+                return await self._extract_from_pptx(file_path)
+            else:
+                # Fallback: try to read as text
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+        except Exception as e:
+            self.logger.error(f"Failed to extract text from {filename}: {e}")
+            raise ValueError(f"Failed to extract text from file: {str(e)}")
+    
+    async def _extract_from_pdf(self, file_path: str) -> str:
+        """Extract text from PDF file"""
+        try:
+            import PyPDF2
+            text = ""
+            with open(file_path, 'rb') as file:
+                reader = PyPDF2.PdfReader(file)
+                for page in reader.pages:
+                    text += page.extract_text() + "\n"
+            return text
+        except ImportError:
+            self.logger.warning("PyPDF2 not installed, trying alternative method")
+            # Fallback: try to read as text
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                return f.read()
+        except Exception as e:
+            self.logger.error(f"Failed to extract from PDF: {e}")
+            raise
+    
+    async def _extract_from_docx(self, file_path: str) -> str:
+        """Extract text from DOCX file"""
+        try:
+            from docx import Document
+            doc = Document(file_path)
+            text = ""
+            for paragraph in doc.paragraphs:
+                text += paragraph.text + "\n"
+            return text
+        except ImportError:
+            self.logger.warning("python-docx not installed, trying alternative method")
+            # Fallback: try to read as text
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                return f.read()
+        except Exception as e:
+            self.logger.error(f"Failed to extract from DOCX: {e}")
+            raise
+    
+    async def _extract_from_pptx(self, file_path: str) -> str:
+        """Extract text from PPTX file"""
+        try:
+            from pptx import Presentation
+            prs = Presentation(file_path)
+            text = ""
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text += shape.text + "\n"
+            return text
+        except ImportError:
+            self.logger.warning("python-pptx not installed, trying alternative method")
+            # Fallback: try to read as text
+            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                return f.read()
+        except Exception as e:
+            self.logger.error(f"Failed to extract from PPTX: {e}")
+            raise
+    
+    async def extract_text_from_image(self, file_path: str) -> str:
+        """Extract text from image using OCR"""
+        try:
+            import pytesseract
+            from PIL import Image
+            
+            # Open image and extract text
+            image = Image.open(file_path)
+            text = pytesseract.image_to_string(image)
+            return text
+        except ImportError:
+            self.logger.warning("pytesseract or PIL not installed, returning placeholder")
+            return "[Image file uploaded - OCR not available. Install pytesseract and pillow to extract text from images.]"
+        except Exception as e:
+            self.logger.error(f"Failed to extract text from image: {e}")
+            return f"[Failed to extract text from image: {str(e)}]"
 
 
 # Global instance

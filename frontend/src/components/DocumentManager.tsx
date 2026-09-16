@@ -116,18 +116,52 @@ const DocumentManager: React.FC = () => {
 
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0]
-      setUploadTitle(file.name)
-      
-      // Read file content
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const content = event.target?.result as string
-        setUploadContent(content)
+      handleFileUpload(file)
+    }
+  }
+
+  const handleFileUpload = async (file: File) => {
+    setUploading(true)
+    setUploadProgress(0)
+    
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + 10
+      })
+    }, 200)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await fetch('/api/v1/documents/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setUploadProgress(100)
+        clearInterval(progressInterval)
+        success(`File "${file.name}" uploaded successfully`)
+        fetchDocuments()
+      } else {
+        const errorData = await response.json()
+        error(errorData.detail || 'Failed to upload file')
+        clearInterval(progressInterval)
       }
-      reader.readAsText(file)
-      
-      setShowUpload(true)
-      info(`File "${file.name}" ready for upload`)
+    } catch (err) {
+      console.error('Failed to upload file:', err)
+      error('Failed to upload file')
+      clearInterval(progressInterval)
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -354,8 +388,29 @@ const DocumentManager: React.FC = () => {
                   aria-required="true"
                 />
               </div>
+              
               <div>
-                <label htmlFor="document-content" className="block text-sm font-medium text-gray-300 mb-2">Content</label>
+                <label htmlFor="document-file" className="block text-sm font-medium text-gray-300 mb-2">Or Upload File</label>
+                <input
+                  id="document-file"
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      setUploadTitle(file.name)
+                      handleFileUpload(file)
+                    }
+                  }}
+                  accept=".txt,.md,.json,.csv,.xml,.html,.py,.js,.ts,.java,.c,.cpp,.h,.css,.sql,.pdf,.docx,.doc,.pptx,.ppt,.odt,.rtf,.png,.jpg,.jpeg,.gif,.bmp,.webp,.svg"
+                  className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Supported: Text files, PDFs, Word docs, PowerPoint, images
+                </p>
+              </div>
+              
+              <div>
+                <label htmlFor="document-content" className="block text-sm font-medium text-gray-300 mb-2">Or Paste Content</label>
                 <textarea
                   id="document-content"
                   value={uploadContent}

@@ -3,9 +3,29 @@ from app.services.document_service import document_service
 from app.api.schemas import DocumentCreate, DocumentResponse
 from typing import Dict, Any, Optional, List
 import logging
+import os
+import tempfile
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Supported file types
+SUPPORTED_TEXT_EXTENSIONS = {'.txt', '.md', '.json', '.csv', '.xml', '.html', '.py', '.js', '.ts', '.java', '.c', '.cpp', '.h', '.css', '.sql'}
+SUPPORTED_DOCUMENT_EXTENSIONS = {'.pdf', '.docx', '.doc', '.pptx', '.ppt', '.odt', '.rtf'}
+SUPPORTED_IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg'}
+
+def get_file_type(filename: str) -> str:
+    """Determine file type from extension"""
+    ext = os.path.splitext(filename)[1].lower()
+    
+    if ext in SUPPORTED_TEXT_EXTENSIONS:
+        return 'text'
+    elif ext in SUPPORTED_DOCUMENT_EXTENSIONS:
+        return 'document'
+    elif ext in SUPPORTED_IMAGE_EXTENSIONS:
+        return 'image'
+    else:
+        return 'unknown'
 
 
 @router.post("/documents", response_model=DocumentResponse)
@@ -30,6 +50,101 @@ async def create_document(document: DocumentCreate):
     except Exception as e:
         logger.error(f"Failed to create document: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create document: {str(e)}")
+
+
+@router.post("/documents/upload")
+async def upload_document(file: UploadFile = File(...)):
+    """Upload a file and process it"""
+    try:
+        # Check file type
+        file_type = get_file_type(file.filename)
+        
+        if file_type == 'unknown':
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unsupported file type. Supported: text files, PDFs, Word docs, PowerPoint, images"
+            )
+        
+        # Read file content
+        content = await file.read()
+        
+        # Process based on file type
+        if file_type == 'text':
+            # Text files - decode directly
+            try:
+                text_content = content.decode('utf-8')
+            except UnicodeDecodeError:
+                try:
+                    text_content = content.decode('latin-1')
+                except Exception as e:
+                    raise HTTPException(status_code=400, detail=f"Failed to decode text file: {str(e)}")
+            
+            # Create and process document
+            document_id = await document_service.process_text_content(
+                user_id=1,
+                title=file.filename,
+                text_content=text_content,
+                metadata={"source": "upload", "file_type": file_type}
+            )
+            
+        elif file_type == 'document':
+            # Document files (PDF, DOCX, PPTX) - save to temp file and extract text
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+                temp_file.write(content)
+                temp_file_path = temp_file.name
+            
+            try:
+                # Extract text based on file type
+                text_content = await document_service.extract_text_from_file(temp_file_path, file.filename)
+                
+                # Create and process document
+                document_id = await document_service.process_text_content(
+                    user_id=1,
+                    title=file.filename,
+                    text_content=text_content,
+                    metadata={"source": "upload", "file_type": file_type}
+                )
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+                    
+        elif file_type == 'image':
+            # Image files - save to temp file and extract text using OCR
+            with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+                temp_file.write(content)
+                temp_file_path = temp_file.name
+            
+            try:
+                # Extract text using OCR
+                text_content = await document_service.extract_text_from_image(temp_file_path)
+                
+                # Create and process document
+                document_id = await document_service.process_text_content(
+                    user_id=1,
+                    title=file.filename,
+                    text_content=text_content,
+                    metadata={"source": "upload", "file_type": file_type}
+                )
+            finally:
+                # Clean up temp file
+                if os.path.exists(temp_file_path):
+                    os.unlink(temp_file_path)
+        
+        # Get document data
+        doc_data = await document_service.get_document(document_id)
+        
+        return {
+            "document_id": document_id,
+            "document": doc_data,
+            "message": f"File '{file.filename}' uploaded and processed successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to upload file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
 
 @router.post("/documents/text")
