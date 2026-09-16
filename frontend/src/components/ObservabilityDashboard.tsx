@@ -586,16 +586,16 @@ const ObservabilityDashboard: React.FC = () => {
                         <div>
                           <span className="text-gray-500">Duration:</span> {trace.duration_ms ? `${trace.duration_ms.toFixed(2)}ms` : 'N/A'}
                         </div>
-                        <div>
-                          <span className="text-gray-500">Trace ID:</span> {trace.trace_id.slice(0, 8)}...
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Trace ID:</span> {trace.trace_id}
                         </div>
-                        <div>
-                          <span className="text-gray-500">Span ID:</span> {trace.span_id.slice(0, 8)}...
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Span ID:</span> {trace.span_id}
                         </div>
                       </div>
                       {trace.parent_span_id && (
                         <div className="text-xs text-gray-500 mt-1">
-                          Parent: {trace.parent_span_id.slice(0, 8)}...
+                          Parent: {trace.parent_span_id}
                         </div>
                       )}
                       {trace.metadata && Object.keys(trace.metadata).length > 0 && (
