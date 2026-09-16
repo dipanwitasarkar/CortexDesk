@@ -81,15 +81,30 @@ async def get_active_llm_configuration(user_id: int = 1):
         config = result.scalar_one_or_none()
         
         if not config:
-            # Return default local configuration
+            # Create default local configuration
+            default_config = LLMConfiguration(
+                user_id=user_id,
+                provider=LLMProvider.LOCAL,
+                model_name="gpt2",
+                endpoint=None,
+                api_key=None,
+                temperature=0.7,
+                max_tokens=1000,
+                is_active=True
+            )
+            db.add(default_config)
+            await db.commit()
+            await db.refresh(default_config)
+            
             return {
-                "provider": "local",
-                "model_name": "gpt2",
-                "endpoint": None,
-                "api_key": None,
-                "temperature": 0.7,
-                "max_tokens": 1000,
-                "is_active": True
+                "id": default_config.id,
+                "provider": default_config.provider.value,
+                "model_name": default_config.model_name,
+                "endpoint": default_config.endpoint,
+                "api_key": default_config.api_key,
+                "temperature": default_config.temperature,
+                "max_tokens": default_config.max_tokens,
+                "is_active": default_config.is_active
             }
         
         return {

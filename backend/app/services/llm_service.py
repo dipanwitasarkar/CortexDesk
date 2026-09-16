@@ -196,8 +196,23 @@ class LLMService:
                     max_tokens=config.max_tokens
                 )
             else:
-                logger.info("No active LLM configuration found, using default")
-                # Use default local configuration
+                logger.info("No active LLM configuration found, creating default local configuration")
+                # Create default local configuration
+                default_config = LLMConfiguration(
+                    user_id=user_id,
+                    provider=LLMProvider.LOCAL,
+                    model_name="gpt2",
+                    endpoint=None,
+                    api_key=None,
+                    temperature=0.7,
+                    max_tokens=1000,
+                    is_active=True
+                )
+                db.add(default_config)
+                await db.commit()
+                await db.refresh(default_config)
+                
+                # Load the default configuration
                 self._load_configuration("local", "gpt2", None, None, 0.7, 1000)
 
     async def generate_response(
