@@ -49,15 +49,16 @@ async def lifespan(app: FastAPI):
         users = result.scalars().all()
         
         for user in users:
-            # Check if user has any LLM configuration
+            # Check if user has a local LLM configuration
             config_result = await db.execute(
                 select(LLMConfiguration)
                 .where(LLMConfiguration.user_id == user.id)
+                .where(LLMConfiguration.provider == LLMProvider.LOCAL)
             )
-            configs = config_result.scalars().all()
+            local_configs = config_result.scalars().all()
             
-            # If no configuration exists, create default local configuration
-            if len(configs) == 0:
+            # If no local configuration exists, create default local configuration
+            if len(local_configs) == 0:
                 default_config = LLMConfiguration(
                     user_id=user.id,
                     provider=LLMProvider.LOCAL,

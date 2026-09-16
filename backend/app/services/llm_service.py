@@ -196,24 +196,40 @@ class LLMService:
                     max_tokens=config.max_tokens
                 )
             else:
-                logger.info("No active LLM configuration found, creating default local configuration")
-                # Create default local configuration
-                default_config = LLMConfiguration(
-                    user_id=user_id,
-                    provider=LLMProvider.LOCAL,
-                    model_name="gpt2",
-                    endpoint=None,
-                    api_key=None,
-                    temperature=0.7,
-                    max_tokens=1000,
-                    is_active=True
+                logger.info("No active LLM configuration found, checking for local configuration")
+                # Check if user has a local configuration
+                local_result = await db.execute(
+                    select(LLMConfiguration)
+                    .where(LLMConfiguration.user_id == user_id)
+                    .where(LLMConfiguration.provider == LLMProvider.LOCAL)
                 )
-                db.add(default_config)
-                await db.commit()
-                await db.refresh(default_config)
+                local_config = local_result.scalar_one_or_none()
                 
-                # Load the default configuration
-                self._load_configuration("local", "gpt2", None, None, 0.7, 1000)
+                if local_config:
+                    # Activate the local configuration
+                    local_config.is_active = True
+                    await db.commit()
+                    logger.info(f"Activated existing local configuration for user {user_id}")
+                    self._load_configuration("local", local_config.model_name, local_config.endpoint, local_config.api_key, local_config.temperature, local_config.max_tokens)
+                else:
+                    # Create default local configuration
+                    logger.info("No local configuration found, creating default")
+                    default_config = LLMConfiguration(
+                        user_id=user_id,
+                        provider=LLMProvider.LOCAL,
+                        model_name="gpt2",
+                        endpoint=None,
+                        api_key=None,
+                        temperature=0.7,
+                        max_tokens=1000,
+                        is_active=True
+                    )
+                    db.add(default_config)
+                    await db.commit()
+                    await db.refresh(default_config)
+                    
+                    # Load the default configuration
+                    self._load_configuration("local", "gpt2", None, None, 0.7, 1000)
 
     async def generate_response(
         self,

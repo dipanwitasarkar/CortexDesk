@@ -21,8 +21,9 @@ async def get_llm_configurations(user_id: int = 1):
         )
         configurations = result.scalars().all()
         
-        # If no configurations exist, create default local configuration
-        if len(configurations) == 0:
+        # If no local configuration exists, create default local configuration
+        local_configs = [c for c in configurations if c.provider == LLMProvider.LOCAL]
+        if len(local_configs) == 0:
             default_config = LLMConfiguration(
                 user_id=user_id,
                 provider=LLMProvider.LOCAL,
@@ -36,7 +37,7 @@ async def get_llm_configurations(user_id: int = 1):
             db.add(default_config)
             await db.commit()
             await db.refresh(default_config)
-            configurations = [default_config]
+            configurations = [default_config] + list(configurations)
         
         return {
             "configurations": [
