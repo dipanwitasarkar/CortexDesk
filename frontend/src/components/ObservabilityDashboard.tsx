@@ -561,18 +561,52 @@ const ObservabilityDashboard: React.FC = () => {
                   {traces.traces
                     .filter((trace: any) => 
                       !traceFilter || 
-                      trace.operation.toLowerCase().includes(traceFilter.toLowerCase()) ||
-                      trace.request_id.toLowerCase().includes(traceFilter.toLowerCase())
+                      trace.operation_name.toLowerCase().includes(traceFilter.toLowerCase()) ||
+                      trace.service_name.toLowerCase().includes(traceFilter.toLowerCase()) ||
+                      trace.trace_id.toLowerCase().includes(traceFilter.toLowerCase())
                     )
                     .map((trace: any, index: number) => (
                     <div key={index} className="bg-gray-900 rounded p-3 text-sm">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-gray-400 text-xs">{trace.timestamp}</span>
-                        <span className="text-blue-400">{trace.operation}</span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          trace.status === 'success' ? 'bg-green-500/20 text-green-400' :
+                          trace.status === 'error' ? 'bg-red-500/20 text-red-400' :
+                          trace.status === 'running' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {trace.status}
+                        </span>
+                        <span className="text-gray-400 text-xs">{new Date(trace.start_time).toLocaleString()}</span>
                       </div>
-                      <div className="text-gray-300">Request ID: {trace.request_id}</div>
-                      {trace.duration && (
-                        <div className="text-gray-400 text-xs">Duration: {trace.duration.toFixed(3)}s</div>
+                      <div className="text-gray-300 font-medium mb-1">{trace.operation_name}</div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                        <div>
+                          <span className="text-gray-500">Service:</span> {trace.service_name}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Duration:</span> {trace.duration_ms ? `${trace.duration_ms.toFixed(2)}ms` : 'N/A'}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Trace ID:</span> {trace.trace_id.slice(0, 8)}...
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Span ID:</span> {trace.span_id.slice(0, 8)}...
+                        </div>
+                      </div>
+                      {trace.parent_span_id && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Parent: {trace.parent_span_id.slice(0, 8)}...
+                        </div>
+                      )}
+                      {trace.metadata && Object.keys(trace.metadata).length > 0 && (
+                        <div className="mt-2 p-2 bg-gray-800 rounded text-xs">
+                          <div className="text-gray-500 mb-1">Metadata:</div>
+                          {Object.entries(trace.metadata).map(([key, value]) => (
+                            <div key={key} className="text-gray-300">
+                              <span className="text-gray-500">{key}:</span> {String(value).slice(0, 50)}
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   ))}
