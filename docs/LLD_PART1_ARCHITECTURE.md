@@ -33,10 +33,11 @@ This document provides a comprehensive low-level design of the CortexDesk multi-
         ┌──────────────┼──────────────┬──────────────┐
         ▼              ▼              ▼              ▼
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-│ PostgreSQL   │ │   Redis      │ │   Qdrant     │ │  Local LLM   │
-│              │ │              │ │              │ │  (GPT-2)     │
-│ Business Data│ │ Runtime State│ │ Vector DB    │ │              │
-│ Observability│ │              │ │              │ │              │
+│ PostgreSQL   │ │   Redis      │ │   Qdrant     │ │  LLM Service  │
+│              │ │              │ │              │ │              │
+│ Business Data│ │ Runtime State│ │ Vector DB    │ │  Local GPT-2  │
+│ Observability│ │              │ │              │ │  Cloud LLMs   │
+│ LLM Configs  │ │              │ │              │ │  (Groq, etc.) │
 └──────────────┘ └──────────────┘ └──────────────┘ └──────────────┘
 ```
 
@@ -334,6 +335,7 @@ QDRANT_API_KEY=
 
 **LLM Configuration:**
 ```bash
+# Default configuration (can be overridden via UI)
 LLM_PROVIDER=local
 LLM_MODEL=gpt2
 LLM_API_KEY=
@@ -341,6 +343,17 @@ LLM_API_ENDPOINT=
 LLM_TEMPERATURE=0.7
 LLM_MAX_TOKENS=1000
 ```
+
+**Note:** LLM configuration is now configurable via the UI. Users can switch between:
+- Local GPT-2 (free, limited quality)
+- Groq (free, fast, high quality)
+- RunPod (paid, flexible)
+- OpenAI (paid, high quality)
+- Anthropic (paid, high quality)
+- Azure OpenAI (paid, enterprise)
+- Custom (any OpenAI-compatible endpoint)
+
+Configurations are stored per-user in the database and can be changed without restarting the backend.
 
 **Embedding Configuration:**
 ```bash

@@ -376,6 +376,106 @@ class MCPIntegration(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 ```
 
+### 2.6 LLM Configuration Model
+
+**Table:** `llm_configurations`
+
+**Purpose:** Store user-specific LLM provider configurations with dynamic switching capability.
+
+**Schema:**
+```sql
+CREATE TABLE llm_configurations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider VARCHAR(50) NOT NULL,
+    model_name VARCHAR(100) NOT NULL,
+    endpoint VARCHAR(500),
+    api_key TEXT,
+    temperature FLOAT DEFAULT 0.7,
+    max_tokens INTEGER DEFAULT 1000,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Fields:**
+- `id` (SERIAL, PRIMARY KEY): Unique configuration identifier
+- `user_id` (INTEGER, FOREIGN KEY): User who owns this configuration
+- `provider` (VARCHAR(50)): LLM provider (local, groq, runpod, openai, anthropic, azure, custom)
+- `model_name` (VARCHAR(100)): Model name (e.g., gpt2, llama2-70b, gpt-4)
+- `endpoint` (VARCHAR(500)): API endpoint URL (for custom providers)
+- `api_key` (TEXT): API key for cloud providers
+- `temperature` (FLOAT): Temperature parameter (0.0-2.0)
+- `max_tokens` (INTEGER): Maximum tokens to generate
+- `is_active` (BOOLEAN): Whether this is the active configuration
+- `created_at` (TIMESTAMP): Configuration creation timestamp
+- `updated_at` (TIMESTAMP): Last update timestamp
+
+**Indexes:**
+- PRIMARY KEY on `id`
+- INDEX on `user_id`
+- INDEX on `provider`
+- INDEX on `is_active`
+
+**Constraints:**
+- FOREIGN KEY on `user_id` references `users(id)` ON DELETE CASCADE
+- `provider` must be one of: local, groq, runpod, openai, anthropic, azure, custom
+- `temperature` must be between 0.0 and 2.0
+- `max_tokens` must be positive
+
+**Python Model:**
+```python
+class LLMProvider(enum.Enum):
+    LOCAL = "local"
+    GROQ = "groq"
+    RUNPOD = "runpod"
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    AZURE = "azure"
+    CUSTOM = "custom"
+
+class LLMConfiguration(Base):
+    __tablename__ = "llm_configurations"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider = Column(Enum(LLMProvider), nullable=False, default=LLMProvider.LOCAL)
+    model_name = Column(String(100), nullable=False, default="gpt2")
+    endpoint = Column(String(500), nullable=True)
+    api_key = Column(Text, nullable=True)
+    temperature = Column(Float, default=0.7)
+    max_tokens = Column(Integer, default=1000)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    user = relationship("User", backref="llm_configurations")
+```
+
+**Supported Providers:**
+- **local**: GPT-2 (free, limited quality)
+- **groq**: Groq Cloud (free, fast, high quality)
+- **runpod**: RunPod Cloud (paid, flexible)
+- **openai**: OpenAI GPT models (paid, high quality)
+- **anthropic**: Anthropic Claude models (paid, high quality)
+- **azure**: Azure OpenAI Service (paid, enterprise)
+- **custom**: Any OpenAI-compatible endpoint
+
+**Default Configuration:**
+- Provider: local
+- Model: gpt2
+- Temperature: 0.7
+- Max Tokens: 1000
+- Is Active: True
+
+**Business Rules:**
+- Each user can have multiple LLM configurations
+- Only one configuration can be active per user at a time
+- Default local configuration is created automatically for new users
+- Configurations can be switched without restarting the backend
+- API keys are stored in the database (should be encrypted in production)
+
 ---
 
 ## 3. Observability Data Models

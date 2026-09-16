@@ -63,6 +63,17 @@ This document provides detailed specifications for all API endpoints in the Cort
 - `POST /api/v1/mcp/integrations/{integration_id}/test` - Test MCP connection
 - `GET /api/v1/mcp/types` - Get available MCP types
 
+**LLM Configuration:**
+- `GET /api/v1/llm/config` - List LLM configurations
+- `GET /api/v1/llm/config/{config_id}` - Get specific configuration
+- `GET /api/v1/llm/config/active` - Get active configuration
+- `POST /api/v1/llm/config` - Create LLM configuration
+- `PUT /api/v1/llm/config/{config_id}` - Update LLM configuration
+- `DELETE /api/v1/llm/config/{config_id}` - Delete LLM configuration
+- `POST /api/v1/llm/config/{config_id}/activate` - Activate LLM configuration
+- `GET /api/v1/llm/providers` - Get available LLM providers
+- `POST /api/v1/llm/config/test` - Test LLM configuration
+
 **Observability:**
 - `GET /api/v1/observability/health` - Get observability health
 - `GET /api/v1/observability/metrics` - Get performance metrics
@@ -1075,7 +1086,384 @@ curl -X GET "http://localhost:8000/api/v1/mcp/types"
 
 ---
 
-## 9. Observability APIs
+## 9. LLM Configuration APIs
+
+### 9.1 List LLM Configurations
+
+**Endpoint:** `GET /api/v1/llm/config`
+
+**Purpose:** List all LLM configurations for a user.
+
+**Query Parameters:**
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "configurations": [
+    {
+      "id": 1,
+      "provider": "local",
+      "model_name": "gpt2",
+      "endpoint": null,
+      "api_key": null,
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "is_active": true,
+      "created_at": "2026-09-16T16:00:00Z",
+      "updated_at": null
+    }
+  ],
+  "count": 1
+}
+```
+
+**Status Codes:**
+- 200: Configurations retrieved successfully
+- 500: Internal server error
+
+**Note:** If no local configuration exists, a default local GPT-2 configuration is automatically created.
+
+### 9.2 Get LLM Configuration
+
+**Endpoint:** `GET /api/v1/llm/config/{config_id}`
+
+**Purpose:** Get a specific LLM configuration.
+
+**Path Parameters:**
+- `config_id` (integer, required): Configuration ID
+
+**Query Parameters:**
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "id": 1,
+  "provider": "local",
+  "model_name": "gpt2",
+  "endpoint": null,
+  "api_key": null,
+  "temperature": 0.7,
+  "max_tokens": 1000,
+  "is_active": true,
+  "created_at": "2026-09-16T16:00:00Z",
+  "updated_at": null
+}
+```
+
+**Status Codes:**
+- 200: Configuration retrieved successfully
+- 404: Configuration not found
+- 500: Internal server error
+
+### 9.3 Get Active LLM Configuration
+
+**Endpoint:** `GET /api/v1/llm/config/active`
+
+**Purpose:** Get the active LLM configuration for a user.
+
+**Query Parameters:**
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "id": 1,
+  "provider": "local",
+  "model_name": "gpt2",
+  "endpoint": null,
+  "api_key": null,
+  "temperature": 0.7,
+  "max_tokens": 1000,
+  "is_active": true
+}
+```
+
+**Status Codes:**
+- 200: Active configuration retrieved successfully
+- 500: Internal server error
+
+**Note:** If no active configuration exists, a default local GPT-2 configuration is automatically created and activated.
+
+### 9.4 Create LLM Configuration
+
+**Endpoint:** `POST /api/v1/llm/config`
+
+**Purpose:** Create a new LLM configuration.
+
+**Request Body:**
+```json
+{
+  "provider": "groq",
+  "model_name": "llama2-70b-4096",
+  "endpoint": null,
+  "api_key": "gsk_...",
+  "temperature": 0.7,
+  "max_tokens": 1000,
+  "user_id": 1
+}
+```
+
+**Parameters:**
+- `provider` (string, required): LLM provider (local, groq, runpod, openai, anthropic, azure, custom)
+- `model_name` (string, required): Model name
+- `endpoint` (string, optional): API endpoint URL (required for runpod, azure, custom)
+- `api_key` (string, optional): API key (required for groq, runpod, openai, anthropic, azure, custom)
+- `temperature` (float, optional): Temperature (0.0-2.0, default: 0.7)
+- `max_tokens` (integer, optional): Max tokens (default: 1000)
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "id": 2,
+  "provider": "groq",
+  "model_name": "llama2-70b-4096",
+  "endpoint": null,
+  "api_key": "***",
+  "temperature": 0.7,
+  "max_tokens": 1000,
+  "is_active": false,
+  "created_at": "2026-09-16T16:00:00Z"
+}
+```
+
+**Status Codes:**
+- 200: Configuration created successfully
+- 400: Invalid provider or parameters
+- 500: Internal server error
+
+**Note:** If this is the first configuration, it will be automatically set as active.
+
+### 9.5 Update LLM Configuration
+
+**Endpoint:** `PUT /api/v1/llm/config/{config_id}`
+
+**Purpose:** Update an existing LLM configuration.
+
+**Path Parameters:**
+- `config_id` (integer, required): Configuration ID
+
+**Request Body:**
+```json
+{
+  "provider": "groq",
+  "model_name": "mixtral-8x7b-32768",
+  "endpoint": null,
+  "api_key": "gsk_...",
+  "temperature": 0.8,
+  "max_tokens": 2000,
+  "is_active": true
+}
+```
+
+**Parameters:**
+- `provider` (string, optional): LLM provider
+- `model_name` (string, optional): Model name
+- `endpoint` (string, optional): API endpoint URL
+- `api_key` (string, optional): API key
+- `temperature` (float, optional): Temperature
+- `max_tokens` (integer, optional): Max tokens
+- `is_active` (boolean, optional): Whether to activate this configuration
+
+**Response:**
+```json
+{
+  "id": 2,
+  "provider": "groq",
+  "model_name": "mixtral-8x7b-32768",
+  "endpoint": null,
+  "api_key": "***",
+  "temperature": 0.8,
+  "max_tokens": 2000,
+  "is_active": true,
+  "updated_at": "2026-09-16T16:05:00Z"
+}
+```
+
+**Status Codes:**
+- 200: Configuration updated successfully
+- 400: Invalid parameters
+- 404: Configuration not found
+- 500: Internal server error
+
+**Note:** If `is_active` is set to true, all other configurations for the user will be deactivated.
+
+### 9.6 Delete LLM Configuration
+
+**Endpoint:** `DELETE /api/v1/llm/config/{config_id}`
+
+**Purpose:** Delete an LLM configuration.
+
+**Path Parameters:**
+- `config_id` (integer, required): Configuration ID
+
+**Query Parameters:**
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "message": "Configuration deleted successfully"
+}
+```
+
+**Status Codes:**
+- 200: Configuration deleted successfully
+- 400: Cannot delete active configuration
+- 404: Configuration not found
+- 500: Internal server error
+
+**Note:** Active configurations cannot be deleted. Activate another configuration first.
+
+### 9.7 Activate LLM Configuration
+
+**Endpoint:** `POST /api/v1/llm/config/{config_id}/activate`
+
+**Purpose:** Activate a specific LLM configuration.
+
+**Path Parameters:**
+- `config_id` (integer, required): Configuration ID
+
+**Query Parameters:**
+- `user_id` (integer, required): User ID
+
+**Response:**
+```json
+{
+  "message": "Configuration activated successfully",
+  "configuration": {
+    "id": 2,
+    "provider": "groq",
+    "model_name": "llama2-70b-4096",
+    "is_active": true
+  }
+}
+```
+
+**Status Codes:**
+- 200: Configuration activated successfully
+- 404: Configuration not found
+- 500: Internal server error
+
+**Note:** All other configurations for the user will be deactivated.
+
+### 9.8 Get Available LLM Providers
+
+**Endpoint:** `GET /api/v1/llm/providers`
+
+**Purpose:** Get list of available LLM providers with their details.
+
+**Response:**
+```json
+{
+  "providers": [
+    {
+      "value": "local",
+      "name": "Local",
+      "description": "Local GPT-2 model (free, limited quality)",
+      "requires_endpoint": false,
+      "requires_api_key": false,
+      "default_model": "gpt2"
+    },
+    {
+      "value": "groq",
+      "name": "Groq",
+      "description": "Groq Cloud (free, fast, high quality)",
+      "requires_endpoint": false,
+      "requires_api_key": true,
+      "default_model": "llama2-70b-4096"
+    },
+    {
+      "value": "runpod",
+      "name": "RunPod",
+      "description": "RunPod Cloud (paid, flexible)",
+      "requires_endpoint": true,
+      "requires_api_key": true,
+      "default_model": "custom"
+    },
+    {
+      "value": "openai",
+      "name": "OpenAI",
+      "description": "OpenAI GPT models (paid, high quality)",
+      "requires_endpoint": false,
+      "requires_api_key": true,
+      "default_model": "gpt-4"
+    },
+    {
+      "value": "anthropic",
+      "name": "Anthropic",
+      "description": "Anthropic Claude models (paid, high quality)",
+      "requires_endpoint": false,
+      "requires_api_key": true,
+      "default_model": "claude-3-opus-20240229"
+    },
+    {
+      "value": "azure",
+      "name": "Azure OpenAI",
+      "description": "Azure OpenAI Service (paid, enterprise)",
+      "requires_endpoint": true,
+      "requires_api_key": true,
+      "default_model": "gpt-4"
+    },
+    {
+      "value": "custom",
+      "name": "Custom",
+      "description": "Custom LLM endpoint",
+      "requires_endpoint": true,
+      "requires_api_key": true,
+      "default_model": "custom"
+    }
+  ]
+}
+```
+
+**Status Codes:**
+- 200: Providers retrieved successfully
+- 500: Internal server error
+
+### 9.9 Test LLM Configuration
+
+**Endpoint:** `POST /api/v1/llm/config/test`
+
+**Purpose:** Test a LLM configuration without saving it.
+
+**Request Body:**
+```json
+{
+  "provider": "groq",
+  "model_name": "llama2-70b-4096",
+  "endpoint": null,
+  "api_key": "gsk_..."
+}
+```
+
+**Parameters:**
+- `provider` (string, required): LLM provider
+- `model_name` (string, required): Model name
+- `endpoint` (string, optional): API endpoint URL
+- `api_key` (string, optional): API key
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Configuration is valid",
+  "note": "Connection test not implemented yet"
+}
+```
+
+**Status Codes:**
+- 200: Configuration tested successfully
+- 400: Invalid configuration
+- 500: Internal server error
+
+**Note:** This validates the configuration but does not actually test the connection to the provider.
+
+---
+
+## 10. Observability APIs
 
 ### 9.1 Get Observability Health
 

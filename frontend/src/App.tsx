@@ -265,6 +265,10 @@ function App() {
                     and sentence-transformers/all-MiniLM-L6-v2 for embeddings, with PostgreSQL for persistent storage, 
                     Redis for runtime state, and Qdrant v1.12.0 for vector search and RAG.
                   </p>
+                  <p className="mt-2">
+                    LLM providers are configurable via UI - switch between local GPT-2 and cloud providers 
+                    (Groq, RunPod, OpenAI, Anthropic, Azure, Custom) without restarting the backend.
+                  </p>
                 </div>
               </div>
 
