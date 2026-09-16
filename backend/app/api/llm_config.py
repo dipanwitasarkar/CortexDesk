@@ -21,6 +21,23 @@ async def get_llm_configurations(user_id: int = 1):
         )
         configurations = result.scalars().all()
         
+        # If no configurations exist, create default local configuration
+        if len(configurations) == 0:
+            default_config = LLMConfiguration(
+                user_id=user_id,
+                provider=LLMProvider.LOCAL,
+                model_name="gpt2",
+                endpoint=None,
+                api_key=None,
+                temperature=0.7,
+                max_tokens=1000,
+                is_active=True
+            )
+            db.add(default_config)
+            await db.commit()
+            await db.refresh(default_config)
+            configurations = [default_config]
+        
         return {
             "configurations": [
                 {
