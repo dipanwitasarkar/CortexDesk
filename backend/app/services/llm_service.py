@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class LLMService:
     def __init__(self):
         # Check if using local model
-        if settings.dell_llm_endpoint == "local":
+        if settings.llm_endpoint == "local":
             logger.info("Using local model (gpt2)")
             self.use_local = True
             self.use_runpod = False
@@ -22,9 +22,9 @@ class LLMService:
             
             # Load local model
             try:
-                logger.info(f"Loading local model: {settings.dell_llm_model}")
-                self.tokenizer = AutoTokenizer.from_pretrained(settings.dell_llm_model, local_files_only=True)
-                self.model = AutoModelForCausalLM.from_pretrained(settings.dell_llm_model, local_files_only=True)
+                logger.info(f"Loading local model: {settings.llm_model}")
+                self.tokenizer = AutoTokenizer.from_pretrained(settings.llm_model, local_files_only=True)
+                self.model = AutoModelForCausalLM.from_pretrained(settings.llm_model, local_files_only=True)
                 self.model.eval()  # Set to evaluation mode
                 logger.info("Local model loaded successfully")
             except Exception as e:
@@ -33,7 +33,7 @@ class LLMService:
             
             # Load local embedding model
             try:
-                embedding_model_name = settings.dell_llm_embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
+                embedding_model_name = settings.llm_embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
                 logger.info(f"Loading local embedding model: {embedding_model_name}")
                 self.embedding_model = SentenceTransformer(embedding_model_name)
                 logger.info("Local embedding model loaded successfully")
@@ -41,34 +41,34 @@ class LLMService:
                 logger.error(f"Failed to load local embedding model: {e}")
                 self.embedding_model = None
         # Check if using RunPod (OpenAI-compatible)
-        elif "runpod.ai" in settings.dell_llm_endpoint:
+        elif "runpod.ai" in settings.llm_endpoint:
             logger.info("Using RunPod Public Endpoints (OpenAI-compatible)")
             self.use_local = False
             self.use_runpod = True
             self.chat_model = ChatOpenAI(
-                base_url=settings.dell_llm_endpoint,
-                api_key=settings.dell_llm_api_key,
-                model=settings.dell_llm_model,
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
                 temperature=0.7,
                 streaming=True
             )
             # RunPod doesn't have a separate embedding API, use fallback
             self.embedding_model = None
-        elif "groq.com" in settings.dell_llm_endpoint:
+        elif "groq.com" in settings.llm_endpoint:
             logger.info("Using Groq API (OpenAI-compatible)")
             self.use_local = False
             self.use_runpod = False
             self.use_groq = True
             self.chat_model = ChatOpenAI(
-                base_url=settings.dell_llm_endpoint,
-                api_key=settings.dell_llm_api_key,
-                model=settings.dell_llm_model,
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
                 temperature=0.7,
                 streaming=True
             )
             # Groq doesn't have a separate embedding API, use fallback
             self.embedding_model = None
-        elif "huggingface.co" in settings.dell_llm_endpoint:
+        elif "huggingface.co" in settings.llm_endpoint:
             logger.info("Using Hugging Face Inference API")
             self.use_local = False
             self.use_runpod = False
@@ -76,29 +76,29 @@ class LLMService:
             self.use_huggingface = True
             from huggingface_hub import InferenceClient
             self.hf_client = InferenceClient(
-                token=settings.dell_llm_api_key
+                token=settings.llm_api_key
             )
-            self.model = settings.dell_llm_model
-            self.embedding_model_name = settings.dell_llm_embedding_model
+            self.model = settings.llm_model
+            self.embedding_model_name = settings.llm_embedding_model
         else:
             # Use OpenAI-compatible endpoint (Dell or other)
-            logger.info(f"Using OpenAI-compatible endpoint: {settings.dell_llm_endpoint}")
+            logger.info(f"Using OpenAI-compatible endpoint: {settings.llm_endpoint}")
             self.use_local = False
             self.use_runpod = False
             self.use_groq = False
             self.use_huggingface = False
             self.chat_model = ChatOpenAI(
-                base_url=settings.dell_llm_endpoint,
-                api_key=settings.dell_llm_api_key,
-                model=settings.dell_llm_model,
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
                 temperature=0.7,
                 streaming=True
             )
             
             self.embedding_model = OpenAIEmbeddings(
-                base_url=settings.dell_llm_endpoint,
-                api_key=settings.dell_llm_api_key,
-                model=settings.dell_llm_embedding_model
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_embedding_model
             )
 
     async def generate_response(

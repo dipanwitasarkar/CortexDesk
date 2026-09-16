@@ -5,10 +5,10 @@ import os
 
 class Settings(BaseSettings):
     # LLM Configuration
-    dell_llm_endpoint: str
-    dell_llm_api_key: str
-    dell_llm_model: str = "gpt2"
-    dell_llm_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
+    llm_endpoint: str
+    llm_api_key: str
+    llm_model: str = "gpt2"
+    llm_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Database Configuration
     database_url: str
@@ -24,9 +24,9 @@ class Settings(BaseSettings):
     qdrant_collection_name: str = "ai_assistant_memory"
 
     # Application Configuration
-    app_name: str = "Windows AI Assistant"
+    app_name: str = "CortexDesk"
     app_version: str = "1.0.0"
-    debug: bool = True
+    debug: bool = False
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

@@ -5,23 +5,35 @@ from app.core.config import settings
 from app.core.database import async_engine, Base
 from app.core.redis import redis_manager
 from app.core.qdrant import qdrant_manager
+from app.core.validation import validate_config, ConfigurationError
 from app.api.main import router as api_router
 from app.api.observability import router as observability_router
 from app.api.screenshot import router as screenshot_router
 from app.api.terminal import router as terminal_router
 from app.api.documents import router as documents_router
+from app.api.mcp import router as mcp_router
 from app.services.observability import logger, performance_monitor, error_tracker
 from app.models.chat import Chat, Message
 from app.models.user import User
 from app.models.memory import Memory, AgentExecution
 from app.models.document import Document
+from app.models.mcp import MCPIntegration
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifespan"""
     # Startup
-    logger.info("Starting Windows AI Assistant backend...")
+    logger.info(f"Starting {settings.app_name} backend...")
+    
+    # Validate configuration
+    config_validation = validate_config()
+    if config_validation["status"] != "valid":
+        logger.error(f"Configuration validation failed: {config_validation['errors']}")
+        raise ConfigurationError(
+            f"Invalid configuration: {', '.join([e['message'] for e in config_validation['errors']])}"
+        )
+    logger.info("Configuration validation passed")
     
     # Create database tables
     async with async_engine.begin() as conn:
@@ -44,7 +56,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down Windows AI Assistant backend...")
+    logger.info(f"Shutting down {settings.app_name} backend...")
     await redis_manager.disconnect()
     logger.info("Disconnected from Redis")
 
@@ -85,13 +97,14 @@ app.include_router(observability_router, prefix="/api/v1")
 app.include_router(screenshot_router, prefix="/api/v1")
 app.include_router(terminal_router, prefix="/api/v1")
 app.include_router(documents_router, prefix="/api/v1")
+app.include_router(mcp_router, prefix="/api/v1")
 
 
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {
-        "message": "Windows AI Assistant API",
+        "message": f"{settings.app_name} API",
         "version": settings.app_version,
         "status": "running"
     }
@@ -100,15 +113,23 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
+    config_validation = validate_config()
     return {
-        "status": "healthy",
+        "status": "healthy" if config_validation["status"] == "valid" else "unhealthy",
         "version": settings.app_version,
+        "configuration": config_validation["status"],
         "services": {
             "api": "running",
             "redis": "connected" if redis_manager.redis else "disconnected",
             "qdrant": "connected" if qdrant_manager.client else "disconnected"
         }
     }
+
+
+@app.get("/config")
+async def config_check():
+    """Configuration check endpoint"""
+    return validate_config()
 
 
 if __name__ == "__main__":

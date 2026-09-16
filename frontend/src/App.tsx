@@ -3,8 +3,9 @@ import ChatInterface from './components/ChatInterface'
 import Sidebar from './components/Sidebar'
 import ObservabilityDashboard from './components/ObservabilityDashboard'
 import DocumentManager from './components/DocumentManager'
+import MCPManager from './components/MCPManager'
 import { Chat } from './types'
-import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText } from 'lucide-react'
+import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug } from 'lucide-react'
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([])
@@ -13,6 +14,7 @@ function App() {
   const [showDashboard, setShowDashboard] = useState(false)
   const [showAbout, setShowAbout] = useState(false)
   const [showDocuments, setShowDocuments] = useState(false)
+  const [showMCP, setShowMCP] = useState(false)
 
   useEffect(() => {
     // Load chats from API
@@ -107,6 +109,14 @@ function App() {
               >
                 <FileText className="w-4 h-4" />
                 <span className="text-sm">Documents</span>
+              </button>
+              <button
+                onClick={() => setShowMCP(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                title="MCP Integrations"
+              >
+                <Plug className="w-4 h-4" />
+                <span className="text-sm">MCP</span>
               </button>
               <button
                 onClick={() => setShowAbout(true)}
@@ -334,6 +344,32 @@ function App() {
             {/* Modal Content */}
             <div className="p-6">
               <DocumentManager />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MCP Modal */}
+      {showMCP && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-700">
+              <div className="flex items-center gap-3">
+                <Plug className="w-6 h-6 text-purple-400" />
+                <h2 className="text-xl font-bold">MCP Integrations</h2>
+              </div>
+              <button
+                onClick={() => setShowMCP(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <MCPManager />
             </div>
           </div>
         </div>

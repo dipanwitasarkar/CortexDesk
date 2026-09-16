@@ -16,7 +16,7 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 - **Privacy:** 100% local data storage
 - **Quality:** Limited with gpt2 (upgrade to Groq/RunPod for production)
 
-**Note:** gpt2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support. See [LOCAL_GPT2_SETUP.md](LOCAL_GPT2_SETUP.md) for details.
+**Note:** gpt2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support.
 
 ### What Makes It Different
 
