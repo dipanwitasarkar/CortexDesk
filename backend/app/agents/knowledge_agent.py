@@ -51,21 +51,28 @@ Be thorough in your search and provide well-sourced, accurate information."""
         
         # Try to retrieve from memory
         try:
-            memories = await memory_service.get_memories(user_id, limit=5)
+            memories = await memory_service.retrieve_memories(
+                user_id=user_id,
+                query=user_message,
+                limit=5
+            )
             
             if memories:
-                memory_context = "\n".join([m.content for m in memories])
+                # memories is a list of dictionaries from Qdrant
+                memory_context = "\n".join([m.get("payload", {}).get("content", str(m)) for m in memories])
                 context_prompt = f"Based on your stored information:\n{memory_context}\n\nUser question: {user_message}"
             else:
                 context_prompt = f"User question: {user_message}"
             
             # Use LLM to generate a response
             try:
+                print(f"[DEBUG] Knowledge agent calling LLM with prompt: {context_prompt[:100]}...")
                 response = await llm_service.generate_simple_response(
                     message=context_prompt,
                     context=context,
                     chat_history=[]
                 )
+                print(f"[DEBUG] Knowledge agent got LLM response: {response[:100]}...")
                 
                 return {
                     "success": True,
@@ -77,6 +84,7 @@ Be thorough in your search and provide well-sourced, accurate information."""
                     }
                 }
             except Exception as llm_error:
+                print(f"[DEBUG] Knowledge agent LLM failed: {str(llm_error)}")
                 # Fallback if LLM fails
                 return {
                     "success": True,
@@ -89,6 +97,7 @@ Be thorough in your search and provide well-sourced, accurate information."""
                 }
                 
         except Exception as e:
+            print(f"[DEBUG] Knowledge agent failed: {str(e)}")
             # Fallback response if anything fails
             return {
                 "success": True,
