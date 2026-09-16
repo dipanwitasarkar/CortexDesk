@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap } from 'lucide-react'
+import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap, DatabaseZap } from 'lucide-react'
 
 interface PerformanceData {
   timestamp: string
@@ -71,7 +71,17 @@ interface RedisData {
   timestamp: string
 }
 
-type TabType = 'overview' | 'logs' | 'traces' | 'database' | 'runtime-state'
+interface QdrantData {
+  collections: {
+    name: string
+    points_count: number
+    indexed_vectors_count: number
+    status: string
+  }[]
+  timestamp: string
+}
+
+type TabType = 'overview' | 'logs' | 'traces' | 'database' | 'runtime-state' | 'qdrant'
 
 const ObservabilityDashboard: React.FC = () => {
   const [performance, setPerformance] = useState<PerformanceData | null>(null)
@@ -82,6 +92,7 @@ const ObservabilityDashboard: React.FC = () => {
   const [database, setDatabase] = useState<DatabaseData | null>(null)
   const [redis, setRedis] = useState<RedisData | null>(null)
   const [runtimeState, setRuntimeState] = useState<any>(null)
+  const [qdrant, setQdrant] = useState<QdrantData | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [activeTab, setActiveTab] = useState<TabType>('overview')
@@ -97,14 +108,15 @@ const ObservabilityDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [perfRes, errorRes, healthRes, logsRes, tracesRes, dbRes, runtimeStateRes] = await Promise.all([
+      const [perfRes, errorRes, healthRes, logsRes, tracesRes, dbRes, runtimeStateRes, qdrantRes] = await Promise.all([
         fetch('http://localhost:8000/api/v1/observability/performance'),
         fetch('http://localhost:8000/api/v1/observability/errors'),
         fetch('http://localhost:8000/api/v1/observability/health'),
         fetch('http://localhost:8000/api/v1/observability/logs'),
         fetch('http://localhost:8000/api/v1/observability/traces'),
         fetch('http://localhost:8000/api/v1/observability/database'),
-        fetch('http://localhost:8000/api/v1/observability/runtime-state')
+        fetch('http://localhost:8000/api/v1/observability/runtime-state'),
+        fetch('http://localhost:6333/collections')
       ])
 
       const perfData = await perfRes.json()
@@ -114,6 +126,7 @@ const ObservabilityDashboard: React.FC = () => {
       const tracesData = await tracesRes.json()
       const dbData = await dbRes.json()
       const runtimeStateData = await runtimeStateRes.json()
+      const qdrantData = await qdrantRes.json()
 
       setPerformance(perfData)
       setErrors(errorData)
@@ -122,6 +135,27 @@ const ObservabilityDashboard: React.FC = () => {
       setTraces(tracesData)
       setDatabase(dbData)
       setRuntimeState(runtimeStateData)
+      
+      // Process Qdrant data
+      if (qdrantData.result && qdrantData.result.collections) {
+        const collections = await Promise.all(
+          qdrantData.result.collections.map(async (collection: any) => {
+            const detailRes = await fetch(`http://localhost:6333/collections/${collection.name}`)
+            const detailData = await detailRes.json()
+            return {
+              name: collection.name,
+              points_count: detailData.result.points_count,
+              indexed_vectors_count: detailData.result.indexed_vectors_count,
+              status: detailData.result.status
+            }
+          })
+        )
+        setQdrant({
+          collections,
+          timestamp: new Date().toISOString()
+        })
+      }
+      
       setLastUpdated(new Date().toLocaleTimeString())
     } catch (error) {
       console.error('Failed to fetch observability data:', error)
@@ -166,7 +200,8 @@ const ObservabilityDashboard: React.FC = () => {
           { id: 'logs', label: 'Logs', icon: FileText },
           { id: 'traces', label: 'Traces', icon: Zap },
           { id: 'database', label: 'Database', icon: Database },
-          { id: 'runtime-state', label: 'Runtime State', icon: Server }
+          { id: 'runtime-state', label: 'Runtime State', icon: Server },
+          { id: 'qdrant', label: 'Qdrant', icon: DatabaseZap }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -545,6 +580,77 @@ const ObservabilityDashboard: React.FC = () => {
                         <li className="flex items-start gap-2">
                           <span className="text-orange-400">•</span>
                           <span><strong>Memory Queue:</strong> Pending memory extraction tasks</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Qdrant Tab */}
+          {activeTab === 'qdrant' && (
+            <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+              <div className="flex items-center gap-3 mb-4">
+                <DatabaseZap className="w-5 h-5 text-purple-400" />
+                <h2 className="text-lg font-semibold">Qdrant Vector Database</h2>
+              </div>
+              {qdrant && (
+                <div className="space-y-6">
+                  {/* Collections Overview */}
+                  <div>
+                    <h3 className="text-md font-semibold mb-3 text-gray-300">Collections</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {qdrant.collections.map((collection) => (
+                        <div key={collection.name} className="bg-gray-900 rounded p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-semibold text-blue-400">{collection.name}</h4>
+                            <span className={`px-2 py-1 rounded text-xs ${
+                              collection.status === 'green' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'
+                            }`}>
+                              {collection.status}
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Points:</span>
+                              <span className="text-white font-semibold">{collection.points_count}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Indexed Vectors:</span>
+                              <span className="text-white font-semibold">{collection.indexed_vectors_count}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h3 className="text-md font-semibold mb-3 text-gray-300">What This Stores</h3>
+                    <div className="bg-gray-900 rounded p-4 text-sm text-gray-300">
+                      <ul className="space-y-2">
+                        <li className="flex items-start gap-2">
+                          <span className="text-blue-400">•</span>
+                          <span><strong>Documents:</strong> Document embeddings for RAG (384-dimensional vectors)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-green-400">•</span>
+                          <span><strong>AI Assistant Memory:</strong> Long-term memory embeddings</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-purple-400">•</span>
+                          <span><strong>Vector Size:</strong> 384 dimensions (sentence-transformers/all-MiniLM-L6-v2)</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-yellow-400">•</span>
+                          <span><strong>Distance Metric:</strong> Cosine similarity</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-pink-400">•</span>
+                          <span><strong>Purpose:</strong> Semantic search and RAG retrieval</span>
                         </li>
                       </ul>
                     </div>
