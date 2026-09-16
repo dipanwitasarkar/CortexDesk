@@ -169,14 +169,12 @@ npm run electron:dev
 
 - **[USER_GUIDE.md](USER_GUIDE.md)** - Comprehensive user guide
 - **[QUICKSTART.md](QUICKSTART.md)** - 15-minute quick start
-- **[docs/NEW_FEATURES.md](docs/NEW_FEATURES.md)** - New features documentation
 
 ### Developer Documentation
 
 - **[SETUP.md](SETUP.md)** - Detailed setup instructions
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System architecture
 - **[docs/API_REFERENCE.md](docs/API_REFERENCE.md)** - API documentation
-- **[docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)** - Implementation status
 
 ---
 
@@ -450,7 +448,9 @@ windows-ai-assistant/
 │   └── vite.config.ts
 ├── infrastructure/         # Docker Compose configuration
 │   └── docker-compose.yml
-└── docs/                  # Documentation
+└── docs/                  # Developer documentation
+    ├── ARCHITECTURE.md    # System architecture
+    └── API_REFERENCE.md   # API documentation
 ```
 
 ### Running Tests
@@ -590,19 +590,6 @@ Internal Use Only
 - **Quick Start**: [QUICKSTART.md](QUICKSTART.md)
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **API Reference**: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
-- **Local gpt2 Setup**: [LOCAL_GPT2_SETUP.md](LOCAL_GPT2_SETUP.md)
-
-### Model Configuration
-
-**Current Setup:**
-- **Model:** gpt2 (local, free)
-- **Quality:** Limited (testing/development only)
-- **Upgrade Options:**
-  - [RunPod Public Endpoints](RUNPOD_SETUP.md) - $10/1M tokens
-  - [Groq](GROQ_SETUP.md) - Free, ultra-fast
-  - [OpenAI](https://platform.openai.com/) - Paid, excellent quality
-
-See the respective setup guides for upgrading to a better model.
 
 ### Reporting Issues
 
