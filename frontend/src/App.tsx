@@ -146,7 +146,7 @@ function App() {
       )}
 
       {/* Main Content */}
-      <div id="main-content" className="flex-1 flex flex-col" role="main">
+      <div id="main-content" className="flex-1 flex flex-col overflow-hidden" role="main">
         {/* Header */}
         <header className="bg-gray-800 border-b border-gray-700 p-4">
           <div className="flex items-center justify-between">
