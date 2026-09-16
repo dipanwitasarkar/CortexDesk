@@ -11,13 +11,14 @@ A multi-agent AI assistant that provides intelligent task automation, document m
 CortexDesk is a comprehensive multi-agent AI system designed to enhance your productivity and development workflow. It features a sophisticated architecture with separate storage layers for different data types, real-time observability, intelligent document management with RAG capabilities, and a modern React-based frontend with comprehensive UX improvements.
 
 **Current Configuration:**
-- **Generation Model:** GPT-2 (local, 124M parameters) - Upgradeable to Groq/RunPod
+- **Generation Model:** GPT-2 (local, 124M parameters) - Configurable via UI
 - **Embedding Model:** sentence-transformers/all-MiniLM-L6-v2 (local, 384 dimensions)
-- **Cost:** Completely free (local models)
+- **Cost:** Free with local models, paid for cloud providers
 - **Privacy:** 100% local data storage
-- **Quality:** Limited with gpt2 (upgrade to Groq/RunPod for production)
+- **Quality:** Configurable - switch between local and cloud models
+- **LLM Providers:** Local, Groq, RunPod, OpenAI, Anthropic, Azure, Custom
 
-**Note:** GPT-2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support.
+**Note:** GPT-2 is configured for testing and development. You can switch to cloud models (Groq, RunPod, OpenAI, Anthropic, Azure) directly from the UI for better quality and performance.
 
 ### What Makes It Different
 
@@ -113,7 +114,7 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 ### 🎨 User Experience
 
 - **Toast Notifications**: Success, error, warning, and info messages
-- **Keyboard Shortcuts**: Ctrl+N (new chat), Ctrl+D (documents), Ctrl+O (observability), Ctrl+M (MCP), ? (about)
+- **Keyboard Shortcuts**: Ctrl+N (new chat), Ctrl+D (documents), Ctrl+O (observability), Ctrl+M (MCP), Ctrl+L (LLM config), ? (about)
 - **Loading States**: Skeleton loaders and progress indicators
 - **Error Handling**: User-friendly error messages with retry mechanisms
 - **Accessibility**: Screen reader support, keyboard navigation, high contrast mode
@@ -121,6 +122,37 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 - **Data Filtering**: Search and filter logs and traces
 - **Drag-and-Drop**: File upload with drag-and-drop support
 - **Status Indicators**: Visual status for MCP integrations and connections
+- **LLM Configuration**: Switch between local and cloud LLM providers from the UI
+
+### 🔌 LLM Configuration
+
+CortexDesk supports multiple LLM providers that you can configure directly from the UI:
+
+**Supported Providers:**
+- **Local**: GPT-2 (free, limited quality)
+- **Groq**: Fast, free cloud models (llama2-70b, mixtral-8x7b)
+- **RunPod**: Flexible GPU-based models (paid)
+- **OpenAI**: GPT-4, GPT-3.5 (paid)
+- **Anthropic**: Claude 3 Opus, Sonnet (paid)
+- **Azure OpenAI**: Enterprise OpenAI (paid)
+- **Custom**: Any OpenAI-compatible endpoint
+
+**Configuration Features:**
+- Add multiple LLM configurations
+- Switch between providers instantly
+- Configure model parameters (temperature, max tokens)
+- Test connections before saving
+- API key management
+- Per-user configuration storage
+
+**How to Configure:**
+1. Click the "LLM" button in the header (or press Ctrl+L)
+2. Click "Add Configuration"
+3. Select your provider
+4. Enter required credentials (endpoint, API key)
+5. Configure model parameters
+6. Test the connection
+7. Save and activate the configuration
 
 ---
 

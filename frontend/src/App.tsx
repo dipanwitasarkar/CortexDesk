@@ -4,9 +4,10 @@ import Sidebar from './components/Sidebar'
 import ObservabilityDashboard from './components/ObservabilityDashboard'
 import DocumentManager from './components/DocumentManager'
 import MCPManager from './components/MCPManager'
+import LLMManager from './components/LLMManager'
 import { ToastProvider } from './components/ToastContainer'
 import { Chat } from './types'
-import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug } from 'lucide-react'
+import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug, Settings } from 'lucide-react'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useAccessibility } from './hooks/useAccessibility'
 
@@ -18,6 +19,7 @@ function App() {
   const [showAbout, setShowAbout] = useState(false)
   const [showDocuments, setShowDocuments] = useState(false)
   const [showMCP, setShowMCP] = useState(false)
+  const [showLLM, setShowLLM] = useState(false)
   const [loadingChats, setLoadingChats] = useState(true)
 
   useEffect(() => {
@@ -102,6 +104,12 @@ function App() {
       description: 'Toggle MCP Manager'
     },
     {
+      key: 'l',
+      ctrlKey: true,
+      handler: () => setShowLLM(!showLLM),
+      description: 'Toggle LLM Configuration'
+    },
+    {
       key: '?',
       handler: () => setShowAbout(!showAbout),
       description: 'Show About'
@@ -171,6 +179,14 @@ function App() {
               >
                 <Plug className="w-4 h-4" />
                 <span className="text-sm">MCP</span>
+              </button>
+              <button
+                onClick={() => setShowLLM(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                title="LLM Configuration"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">LLM</span>
               </button>
               <button
                 onClick={() => setShowAbout(true)}
@@ -299,7 +315,7 @@ function App() {
                       <h4 className="font-semibold text-yellow-400 mb-2">User Experience</h4>
                       <ul className="space-y-1 text-gray-400">
                         <li>• Toast notifications for feedback</li>
-                        <li>• Keyboard shortcuts (Ctrl+N, D, O, M)</li>
+                        <li>• Keyboard shortcuts (Ctrl+N, D, O, M, L)</li>
                         <li>• Loading states with skeleton loaders</li>
                         <li>• Accessibility features (screen reader)</li>
                         <li>• Real-time updates with auto-refresh</li>
@@ -461,6 +477,11 @@ function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* LLM Modal */}
+      {showLLM && (
+        <LLMManager onClose={() => setShowLLM(false)} />
       )}
     </div>
     </ToastProvider>

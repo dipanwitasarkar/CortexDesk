@@ -12,6 +12,7 @@ from app.api.screenshot import router as screenshot_router
 from app.api.terminal import router as terminal_router
 from app.api.documents import router as documents_router
 from app.api.mcp import router as mcp_router
+from app.api.llm_config import router as llm_config_router
 from app.services.observability import logger, performance_monitor, error_tracker
 from app.models.chat import Chat, Message
 from app.models.user import User
@@ -98,6 +99,7 @@ app.include_router(screenshot_router, prefix="/api/v1")
 app.include_router(terminal_router, prefix="/api/v1")
 app.include_router(documents_router, prefix="/api/v1")
 app.include_router(mcp_router, prefix="/api/v1")
+app.include_router(llm_config_router, prefix="/api/v1")
 
 
 @app.get("/")

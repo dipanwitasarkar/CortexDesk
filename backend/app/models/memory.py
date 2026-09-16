@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, Enum, JSON
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, Enum, JSON, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
@@ -85,3 +85,31 @@ class ObservabilityLog(Base):
     message = Column(Text, nullable=False)
     context = Column(JSON)  # Additional context
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+class LLMProvider(enum.Enum):
+    LOCAL = "local"
+    GROQ = "groq"
+    RUNPOD = "runpod"
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    AZURE = "azure"
+    CUSTOM = "custom"
+
+
+class LLMConfiguration(Base):
+    __tablename__ = "llm_configurations"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    provider = Column(Enum(LLMProvider), nullable=False, default=LLMProvider.LOCAL)
+    model_name = Column(String(100), nullable=False, default="gpt2")
+    endpoint = Column(String(500), nullable=True)  # API endpoint URL
+    api_key = Column(Text, nullable=True)  # Encrypted API key
+    temperature = Column(Float, default=0.7)
+    max_tokens = Column(Integer, default=1000)
+    is_active = Column(Boolean, default=True)  # Whether this is the active configuration
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    user = relationship("User", backref="llm_configurations")

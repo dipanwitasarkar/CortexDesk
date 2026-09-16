@@ -15,65 +15,20 @@ logger = logging.getLogger(__name__)
 
 class LLMService:
     def __init__(self):
-        # Initialize with default configuration from settings
-        self.use_local = False
-        self.use_runpod = False
-        self.use_groq = False
-        self.use_huggingface = False
-        self.tokenizer = None
-        self.model = None
-        self.embedding_model = None
-        self.chat_model = None
-        self.hf_client = None
-        self.model_name = settings.llm_model
-        self.embedding_model_name = settings.llm_embedding_model
-        self.temperature = 0.7
-        self.max_tokens = 1000
-        
-        # Load default configuration
-        self._load_configuration(
-            provider="local" if settings.llm_endpoint == "local" else "custom",
-            model_name=settings.llm_model,
-            endpoint=settings.llm_endpoint,
-            api_key=settings.llm_api_key,
-            temperature=0.7,
-            max_tokens=1000
-        )
-    
-    def _load_configuration(
-        self,
-        provider: str,
-        model_name: str,
-        endpoint: Optional[str] = None,
-        api_key: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 1000
-    ):
-        """Load LLM configuration"""
-        self.provider = provider
-        self.model_name = model_name
-        self.endpoint = endpoint
-        self.api_key = api_key
-        self.temperature = temperature
-        self.max_tokens = max_tokens
-        
-        # Reset state
-        self.use_local = False
-        self.use_runpod = False
-        self.use_groq = False
-        self.use_huggingface = False
-        
-        # Load based on provider
-        if provider == "local":
+        # Check if using local model
+        if settings.llm_endpoint == "local":
             logger.info("Using local model (gpt2)")
             self.use_local = True
+            self.use_runpod = False
+            self.use_groq = False
+            self.use_huggingface = False
             
             # Load local model
             try:
-                logger.info(f"Loading local model: {model_name}")
-                self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
-                self.model = AutoModelForCausalLM.from_pretrained(model_name, local_files_only=True)
-                self.model.eval()
+                logger.info(f"Loading local model: {settings.llm_model}")
+                self.tokenizer = AutoTokenizer.from_pretrained(settings.llm_model, local_files_only=True)
+                self.model = AutoModelForCausalLM.from_pretrained(settings.llm_model, local_files_only=True)
+                self.model.eval()  # Set to evaluation mode
                 logger.info("Local model loaded successfully")
             except Exception as e:
                 logger.error(f"Failed to load local model: {e}")
@@ -81,124 +36,73 @@ class LLMService:
             
             # Load local embedding model
             try:
-                embedding_model_name = self.embedding_model_name or "sentence-transformers/all-MiniLM-L6-v2"
+                embedding_model_name = settings.llm_embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
                 logger.info(f"Loading local embedding model: {embedding_model_name}")
                 self.embedding_model = SentenceTransformer(embedding_model_name)
                 logger.info("Local embedding model loaded successfully")
             except Exception as e:
                 logger.error(f"Failed to load local embedding model: {e}")
                 self.embedding_model = None
-                
-        elif provider == "groq":
-            logger.info("Using Groq API (OpenAI-compatible)")
-            self.use_groq = True
-            self.chat_model = ChatOpenAI(
-                base_url="https://api.groq.com/openai/v1",
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
-                streaming=True
-            )
-            self.embedding_model = None
-            
-        elif provider == "runpod":
+        # Check if using RunPod (OpenAI-compatible)
+        elif "runpod.ai" in settings.llm_endpoint:
             logger.info("Using RunPod Public Endpoints (OpenAI-compatible)")
+            self.use_local = False
             self.use_runpod = True
             self.chat_model = ChatOpenAI(
-                base_url=endpoint,
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
+                temperature=0.7,
                 streaming=True
             )
+            # RunPod doesn't have a separate embedding API, use fallback
             self.embedding_model = None
-            
-        elif provider == "openai":
-            logger.info("Using OpenAI API")
+        elif "groq.com" in settings.llm_endpoint:
+            logger.info("Using Groq API (OpenAI-compatible)")
+            self.use_local = False
+            self.use_runpod = False
+            self.use_groq = True
             self.chat_model = ChatOpenAI(
-                base_url="https://api.openai.com/v1",
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
+                temperature=0.7,
                 streaming=True
             )
-            self.embedding_model = OpenAIEmbeddings(
-                base_url="https://api.openai.com/v1",
-                api_key=api_key,
-                model="text-embedding-ada-002"
-            )
-            
-        elif provider == "anthropic":
-            logger.info("Using Anthropic API")
-            # Anthropic requires different client, placeholder for now
-            logger.warning("Anthropic provider not fully implemented yet")
-            self.chat_model = ChatOpenAI(
-                base_url=endpoint or "https://api.anthropic.com",
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
-                streaming=True
-            )
+            # Groq doesn't have a separate embedding API, use fallback
             self.embedding_model = None
-            
-        elif provider == "azure":
-            logger.info("Using Azure OpenAI Service")
-            self.chat_model = ChatOpenAI(
-                base_url=endpoint,
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
-                streaming=True
+        elif "huggingface.co" in settings.llm_endpoint:
+            logger.info("Using Hugging Face Inference API")
+            self.use_local = False
+            self.use_runpod = False
+            self.use_groq = False
+            self.use_huggingface = True
+            from huggingface_hub import InferenceClient
+            self.hf_client = InferenceClient(
+                token=settings.llm_api_key
             )
-            self.embedding_model = OpenAIEmbeddings(
-                base_url=endpoint,
-                api_key=api_key,
-                model="text-embedding-ada-002"
-            )
-            
-        elif provider == "custom":
-            logger.info(f"Using custom endpoint: {endpoint}")
-            self.chat_model = ChatOpenAI(
-                base_url=endpoint,
-                api_key=api_key,
-                model=model_name,
-                temperature=temperature,
-                streaming=True
-            )
-            self.embedding_model = OpenAIEmbeddings(
-                base_url=endpoint,
-                api_key=api_key,
-                model="text-embedding-ada-002"
-            )
-            
+            self.model = settings.llm_model
+            self.embedding_model_name = settings.llm_embedding_model
         else:
-            logger.warning(f"Unknown provider: {provider}, falling back to local")
-            self._load_configuration("local", "gpt2", None, None, temperature, max_tokens)
-    
-    async def load_user_configuration(self, user_id: int = 1):
-        """Load LLM configuration from database for a user"""
-        async for db in get_async_db():
-            result = await db.execute(
-                select(LLMConfiguration)
-                .where(LLMConfiguration.user_id == user_id)
-                .where(LLMConfiguration.is_active == True)
+            # Use OpenAI-compatible endpoint (Dell or other)
+            logger.info(f"Using OpenAI-compatible endpoint: {settings.llm_endpoint}")
+            self.use_local = False
+            self.use_runpod = False
+            self.use_groq = False
+            self.use_huggingface = False
+            self.chat_model = ChatOpenAI(
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_model,
+                temperature=0.7,
+                streaming=True
             )
-            config = result.scalar_one_or_none()
             
-            if config:
-                logger.info(f"Loading user's LLM configuration: {config.provider}")
-                self._load_configuration(
-                    provider=config.provider.value,
-                    model_name=config.model_name,
-                    endpoint=config.endpoint,
-                    api_key=config.api_key,
-                    temperature=config.temperature,
-                    max_tokens=config.max_tokens
-                )
-            else:
-                logger.info("No active LLM configuration found, using default")
-                # Use default local configuration
-                self._load_configuration("local", "gpt2", None, None, 0.7, 1000)
+            self.embedding_model = OpenAIEmbeddings(
+                base_url=settings.llm_endpoint,
+                api_key=settings.llm_api_key,
+                model=settings.llm_embedding_model
+            )
 
     async def generate_response(
         self,
@@ -262,7 +166,7 @@ class LLMService:
             gen_kwargs = {
                 "max_new_tokens": max_tokens if max_tokens else 100,
                 "do_sample": True,
-                "temperature": temperature if temperature else self.temperature,
+                "temperature": temperature if temperature else 0.7,
                 "top_k": 50,
                 "top_p": 0.95,
                 "pad_token_id": self.tokenizer.eos_token_id
@@ -506,5 +410,4 @@ class LLMService:
             await callback(response)
 
 
-# Global instance
 llm_service = LLMService()

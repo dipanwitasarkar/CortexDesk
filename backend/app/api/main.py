@@ -11,6 +11,7 @@ from app.models.chat import Chat, Message, ChatStatus, MessageRole
 from app.models.user import User
 from app.models.memory import AgentExecution
 from app.services.runtime_state import runtime_state
+from app.services.llm_service import llm_service
 from app.agents.supervisor_agent import SupervisorAgent
 from app.agents.code_agent import CodeAgent
 from app.agents.knowledge_agent import KnowledgeAgent
@@ -256,6 +257,9 @@ async def assistant(
     # Update context with request context
     if request.context:
         context.update(request.context)
+    
+    # Load user's LLM configuration
+    await llm_service.load_user_configuration(request.user_id)
     
     # Process through supervisor agent
     supervisor = get_supervisor_agent()
