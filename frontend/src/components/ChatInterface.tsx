@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Message } from '../types'
 import { Send, Loader2 } from 'lucide-react'
+import { useToast } from './ToastContainer'
 
 interface ChatInterfaceProps {
   chat: any
@@ -12,7 +13,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const { success, error } = useToast()
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -25,9 +28,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
       if (response.ok) {
         const data = await response.json()
         setMessages(data.messages || [])
+      } else {
+        error('Failed to load messages')
       }
-    } catch (error) {
-      console.error('Failed to load messages:', error)
+    } catch (err) {
+      console.error('Failed to load messages:', err)
+      error('Failed to load messages')
     }
   }, [chat?.id])
 
@@ -53,9 +59,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
     setMessages([...messages, userMessage])
     setInput('')
     setIsLoading(true)
+    setIsTyping(true)
 
     try {
-      const response = await fetch('api/v1/assistant', {
+      const response = await fetch('/api/v1/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -84,21 +91,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
         }
       } else {
         const errorData = await response.json()
-        throw new Error(errorData.detail || 'Failed to get response')
+        error(errorData.detail || 'Failed to get response')
+        setMessages(prev => prev.slice(0, -1)) // Remove user message on failure
       }
-    } catch (error) {
-      console.error('Failed to send message:', error)
-      const errorMessage: Message = {
-        id: Date.now() + 1,
-        chat_id: chat?.id || 0,
-        role: 'assistant',
-        content: 'Sorry, there was an error processing your message. Please try again.',
-        agent_used: 'system',
-        created_at: new Date().toISOString()
-      }
-      setMessages(prev => [...prev, errorMessage])
+    } catch (err) {
+      console.error('Failed to send message:', err)
+      error('Failed to send message')
+      setMessages(prev => prev.slice(0, -1)) // Remove user message on failure
     } finally {
       setIsLoading(false)
+      setIsTyping(false)
     }
   }
 
@@ -135,34 +137,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
             <p>Start a conversation with your AI assistant</p>
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          <>
+            {messages.map((message) => (
               <div
-                className={`max-w-[70%] rounded-lg p-3 ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-100 border border-gray-700'
-                }`}
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="text-sm">{message.content}</div>
-                {message.agent_used && (
-                  <div className="text-xs mt-1 opacity-70">
-                    Agent: {message.agent_used}
-                  </div>
-                )}
+                <div
+                  className={`max-w-[70%] rounded-lg p-3 ${
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-800 text-gray-100 border border-gray-700'
+                  }`}
+                >
+                  <div className="text-sm">{message.content}</div>
+                  {message.agent_used && (
+                    <div className="text-xs mt-1 opacity-70">
+                      Agent: {message.agent_used}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
-        )}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
-              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
-            </div>
-          </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-800 text-gray-100 border border-gray-700 rounded-lg p-3">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>

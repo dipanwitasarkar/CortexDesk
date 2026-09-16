@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Edit, RefreshCw, CheckCircle, XCircle, Settings, Plug } from 'lucide-react'
+import { useToast } from './ToastContainer'
 
 interface MCPIntegration {
   id: number
@@ -35,24 +36,35 @@ const MCPManager: React.FC = () => {
     config: {} as Record<string, any>,
     description: ''
   })
+  const { success, error, info, warning } = useToast()
 
   const fetchIntegrations = async () => {
     try {
       const response = await fetch('/api/v1/mcp/integrations')
-      const data = await response.json()
-      setIntegrations(data)
-    } catch (error) {
-      console.error('Failed to fetch integrations:', error)
+      if (response.ok) {
+        const data = await response.json()
+        setIntegrations(data)
+      } else {
+        error('Failed to fetch integrations')
+      }
+    } catch (err) {
+      console.error('Failed to fetch integrations:', err)
+      error('Failed to fetch integrations')
     }
   }
 
   const fetchAvailableTypes = async () => {
     try {
       const response = await fetch('/api/v1/mcp/types')
-      const data = await response.json()
-      setAvailableTypes(data)
-    } catch (error) {
-      console.error('Failed to fetch available types:', error)
+      if (response.ok) {
+        const data = await response.json()
+        setAvailableTypes(data)
+      } else {
+        error('Failed to fetch available MCP types')
+      }
+    } catch (err) {
+      console.error('Failed to fetch available types:', err)
+      error('Failed to fetch available MCP types')
     }
   }
 
@@ -63,6 +75,11 @@ const MCPManager: React.FC = () => {
   }, [])
 
   const handleCreate = async () => {
+    if (!formData.name || !formData.type) {
+      error('Please provide name and type')
+      return
+    }
+
     try {
       const response = await fetch('/api/v1/mcp/integrations', {
         method: 'POST',
@@ -71,12 +88,16 @@ const MCPManager: React.FC = () => {
       })
       
       if (response.ok) {
+        success('MCP integration created successfully')
         await fetchIntegrations()
         setShowModal(false)
         resetForm()
+      } else {
+        error('Failed to create MCP integration')
       }
-    } catch (error) {
-      console.error('Failed to create integration:', error)
+    } catch (err) {
+      console.error('Failed to create integration:', err)
+      error('Failed to create MCP integration')
     }
   }
 
@@ -91,13 +112,17 @@ const MCPManager: React.FC = () => {
       })
       
       if (response.ok) {
+        success('MCP integration updated successfully')
         await fetchIntegrations()
         setShowModal(false)
         resetForm()
         setEditingIntegration(null)
+      } else {
+        error('Failed to update MCP integration')
       }
-    } catch (error) {
-      console.error('Failed to update integration:', error)
+    } catch (err) {
+      console.error('Failed to update integration:', err)
+      error('Failed to update MCP integration')
     }
   }
 
@@ -110,10 +135,14 @@ const MCPManager: React.FC = () => {
       })
       
       if (response.ok) {
+        success('MCP integration deleted successfully')
         await fetchIntegrations()
+      } else {
+        error('Failed to delete MCP integration')
       }
-    } catch (error) {
-      console.error('Failed to delete integration:', error)
+    } catch (err) {
+      console.error('Failed to delete integration:', err)
+      error('Failed to delete MCP integration')
     }
   }
 
@@ -125,14 +154,14 @@ const MCPManager: React.FC = () => {
       const result = await response.json()
       
       if (result.success) {
-        alert('Connection test successful!')
+        success('Connection test successful!')
         await fetchIntegrations()
       } else {
-        alert(`Connection test failed: ${result.error}`)
+        error(`Connection test failed: ${result.error}`)
       }
-    } catch (error) {
-      console.error('Failed to test connection:', error)
-      alert('Connection test failed')
+    } catch (err) {
+      console.error('Failed to test connection:', err)
+      error('Connection test failed')
     }
   }
 

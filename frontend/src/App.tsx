@@ -4,8 +4,10 @@ import Sidebar from './components/Sidebar'
 import ObservabilityDashboard from './components/ObservabilityDashboard'
 import DocumentManager from './components/DocumentManager'
 import MCPManager from './components/MCPManager'
+import { ToastProvider } from './components/ToastContainer'
 import { Chat } from './types'
 import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug } from 'lucide-react'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([])
@@ -15,6 +17,7 @@ function App() {
   const [showAbout, setShowAbout] = useState(false)
   const [showDocuments, setShowDocuments] = useState(false)
   const [showMCP, setShowMCP] = useState(false)
+  const [loadingChats, setLoadingChats] = useState(true)
 
   useEffect(() => {
     // Load chats from API
@@ -30,6 +33,8 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to load chats:', error)
+    } finally {
+      setLoadingChats(false)
     }
   }
 
@@ -69,8 +74,42 @@ function App() {
     loadChats()
   }
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      ctrlKey: true,
+      handler: createNewChat,
+      description: 'New Chat'
+    },
+    {
+      key: 'd',
+      ctrlKey: true,
+      handler: () => setShowDocuments(!showDocuments),
+      description: 'Toggle Documents'
+    },
+    {
+      key: 'o',
+      ctrlKey: true,
+      handler: () => setShowDashboard(!showDashboard),
+      description: 'Toggle Observability'
+    },
+    {
+      key: 'm',
+      ctrlKey: true,
+      handler: () => setShowMCP(!showMCP),
+      description: 'Toggle MCP Manager'
+    },
+    {
+      key: '?',
+      handler: () => setShowAbout(!showAbout),
+      description: 'Show About'
+    }
+  ])
+
   return (
-    <div className="flex h-screen bg-gray-900">
+    <ToastProvider>
+      <div className="flex h-screen bg-gray-900">
       {/* Sidebar */}
       {sidebarOpen && (
         <Sidebar
@@ -80,6 +119,7 @@ function App() {
           onNewChat={createNewChat}
           onClose={() => setSidebarOpen(false)}
           onDeleteChat={deleteChat}
+          loading={loadingChats}
         />
       )}
 
@@ -375,6 +415,7 @@ function App() {
         </div>
       )}
     </div>
+    </ToastProvider>
   )
 }
 

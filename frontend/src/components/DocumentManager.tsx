@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { FileText, Upload, Trash2, Search, Plus, X, CheckCircle, AlertCircle, Clock } from 'lucide-react'
+import { useToast } from './ToastContainer'
+import { DocumentSkeleton } from './SkeletonLoader'
 
 interface Document {
   id: number
@@ -22,9 +24,12 @@ const DocumentManager: React.FC = () => {
   const [uploadTitle, setUploadTitle] = useState('')
   const [uploadContent, setUploadContent] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [searching, setSearching] = useState(false)
+  const [dragActive, setDragActive] = useState(false)
+  const { success, error, info } = useToast()
 
   const fetchDocuments = async () => {
     try {
@@ -32,9 +37,12 @@ const DocumentManager: React.FC = () => {
       if (response.ok) {
         const data = await response.json()
         setDocuments(data)
+      } else {
+        error('Failed to fetch documents')
       }
-    } catch (error) {
-      console.error('Failed to fetch documents:', error)
+    } catch (err) {
+      console.error('Failed to fetch documents:', err)
+      error('Failed to fetch documents')
     } finally {
       setLoading(false)
     }
@@ -45,25 +53,81 @@ const DocumentManager: React.FC = () => {
   }, [])
 
   const handleUpload = async () => {
-    if (!uploadTitle || !uploadContent) return
+    if (!uploadTitle || !uploadContent) {
+      error('Please provide both title and content')
+      return
+    }
 
     setUploading(true)
+    setUploadProgress(0)
+    
+    // Simulate upload progress
+    const progressInterval = setInterval(() => {
+      setUploadProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval)
+          return 90
+        }
+        return prev + 10
+      })
+    }, 200)
+
     try {
       const response = await fetch(
         `/api/v1/documents/text?title=${encodeURIComponent(uploadTitle)}&content=${encodeURIComponent(uploadContent)}`
       )
       if (response.ok) {
         const data = await response.json()
-        console.log('Document uploaded:', data)
+        setUploadProgress(100)
+        clearInterval(progressInterval)
+        success('Document uploaded successfully')
         setShowUpload(false)
         setUploadTitle('')
         setUploadContent('')
         fetchDocuments()
+      } else {
+        error('Failed to upload document')
+        clearInterval(progressInterval)
       }
-    } catch (error) {
-      console.error('Failed to upload document:', error)
+    } catch (err) {
+      console.error('Failed to upload document:', err)
+      error('Failed to upload document')
+      clearInterval(progressInterval)
     } finally {
       setUploading(false)
+      setUploadProgress(0)
+    }
+  }
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0]
+      setUploadTitle(file.name)
+      
+      // Read file content
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const content = event.target?.result as string
+        setUploadContent(content)
+      }
+      reader.readAsText(file)
+      
+      setShowUpload(true)
+      info(`File "${file.name}" ready for upload`)
     }
   }
 
@@ -75,15 +139,22 @@ const DocumentManager: React.FC = () => {
         method: 'DELETE'
       })
       if (response.ok) {
+        success('Document deleted successfully')
         fetchDocuments()
+      } else {
+        error('Failed to delete document')
       }
-    } catch (error) {
-      console.error('Failed to delete document:', error)
+    } catch (err) {
+      console.error('Failed to delete document:', err)
+      error('Failed to delete document')
     }
   }
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return
+    if (!searchQuery.trim()) {
+      error('Please enter a search query')
+      return
+    }
 
     setSearching(true)
     try {
@@ -93,9 +164,13 @@ const DocumentManager: React.FC = () => {
       if (response.ok) {
         const data = await response.json()
         setSearchResults(data.results || [])
+        info(`Found ${data.results?.length || 0} results`)
+      } else {
+        error('Search failed')
       }
-    } catch (error) {
-      console.error('Failed to search documents:', error)
+    } catch (err) {
+      console.error('Failed to search documents:', err)
+      error('Failed to search documents')
     } finally {
       setSearching(false)
     }
@@ -132,7 +207,22 @@ const DocumentManager: React.FC = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-800 rounded-lg border border-gray-700">
+    <div 
+      className="relative p-6 bg-gray-800 rounded-lg border border-gray-700"
+      onDragEnter={handleDrag}
+      onDragLeave={handleDrag}
+      onDragOver={handleDrag}
+      onDrop={handleDrop}
+    >
+      {dragActive && (
+        <div className="absolute inset-0 bg-blue-500/20 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center z-10">
+          <div className="text-center">
+            <Upload className="w-12 h-12 text-blue-400 mx-auto mb-2" />
+            <p className="text-blue-400 font-semibold">Drop file here to upload</p>
+          </div>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <FileText className="w-6 h-6 text-blue-400" />
@@ -186,7 +276,9 @@ const DocumentManager: React.FC = () => {
 
       {/* Documents List */}
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Loading documents...</div>
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => <DocumentSkeleton key={i} />)}
+        </div>
       ) : documents.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -262,10 +354,19 @@ const DocumentManager: React.FC = () => {
                   className="w-full px-4 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
                 />
               </div>
+              {uploadProgress > 0 && (
+                <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowUpload(false)}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  disabled={uploading}
+                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white rounded-lg transition-colors"
                 >
                   Cancel
                 </button>
@@ -274,7 +375,7 @@ const DocumentManager: React.FC = () => {
                   disabled={uploading || !uploadTitle || !uploadContent}
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
                 >
-                  {uploading ? 'Uploading...' : 'Upload'}
+                  {uploading ? `Uploading ${uploadProgress}%` : 'Upload'}
                 </button>
               </div>
             </div>

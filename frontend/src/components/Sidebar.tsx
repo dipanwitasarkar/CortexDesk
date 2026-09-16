@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Chat } from '../types'
 import { Plus, X, MessageSquare, Clock, Trash2 } from 'lucide-react'
+import { ChatSkeleton } from './SkeletonLoader'
 
 interface SidebarProps {
   chats: Chat[]
@@ -9,6 +10,7 @@ interface SidebarProps {
   onNewChat: () => void
   onClose: () => void
   onDeleteChat: (chatId: number) => void
+  loading?: boolean
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -17,7 +19,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectChat,
   onNewChat,
   onClose,
-  onDeleteChat
+  onDeleteChat,
+  loading = false
 }) => {
   const [deletingChatId, setDeletingChatId] = useState<number | null>(null)
 
@@ -65,7 +68,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto p-2">
-        {chats.length === 0 ? (
+        {loading ? (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => <ChatSkeleton key={i} />)}
+          </div>
+        ) : chats.length === 0 ? (
           <div className="text-center text-gray-400 text-sm mt-8">
             <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-50" />
             <p>No conversations yet</p>
