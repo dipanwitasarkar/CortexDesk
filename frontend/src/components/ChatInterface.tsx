@@ -21,7 +21,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
   const loadMessages = useCallback(async () => {
     if (!chat) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/chats/${chat.id}`)
+      const response = await fetch(`/api/v1/chats/${chat.id}`)
       if (response.ok) {
         const data = await response.json()
         setMessages(data.messages || [])
@@ -55,7 +55,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ chat, onNewChat, onChatUp
     setIsLoading(true)
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/assistant', {
+      const response = await fetch('api/v1/assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

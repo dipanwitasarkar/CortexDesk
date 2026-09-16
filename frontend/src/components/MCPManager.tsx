@@ -38,7 +38,7 @@ const MCPManager: React.FC = () => {
 
   const fetchIntegrations = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/mcp/integrations')
+      const response = await fetch('/api/v1/mcp/integrations')
       const data = await response.json()
       setIntegrations(data)
     } catch (error) {
@@ -48,7 +48,7 @@ const MCPManager: React.FC = () => {
 
   const fetchAvailableTypes = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/mcp/types')
+      const response = await fetch('/api/v1/mcp/types')
       const data = await response.json()
       setAvailableTypes(data)
     } catch (error) {
@@ -64,7 +64,7 @@ const MCPManager: React.FC = () => {
 
   const handleCreate = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/mcp/integrations', {
+      const response = await fetch('/api/v1/mcp/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -84,7 +84,7 @@ const MCPManager: React.FC = () => {
     if (!editingIntegration) return
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/mcp/integrations/${editingIntegration.id}`, {
+      const response = await fetch(`/api/v1/mcp/integrations/${editingIntegration.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -105,7 +105,7 @@ const MCPManager: React.FC = () => {
     if (!confirm('Are you sure you want to delete this integration?')) return
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/mcp/integrations/${id}`, {
+      const response = await fetch(`/api/v1/mcp/integrations/${id}`, {
         method: 'DELETE'
       })
       
@@ -119,7 +119,7 @@ const MCPManager: React.FC = () => {
 
   const handleTest = async (id: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/mcp/integrations/${id}/test`, {
+      const response = await fetch(`/api/v1/mcp/integrations/${id}/test`, {
         method: 'POST'
       })
       const result = await response.json()

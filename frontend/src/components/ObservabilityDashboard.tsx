@@ -109,13 +109,13 @@ const ObservabilityDashboard: React.FC = () => {
     setLoading(true)
     try {
       const [perfRes, errorRes, healthRes, logsRes, tracesRes, dbRes, runtimeStateRes, qdrantRes] = await Promise.all([
-        fetch('http://localhost:8000/api/v1/observability/performance'),
-        fetch('http://localhost:8000/api/v1/observability/errors'),
-        fetch('http://localhost:8000/api/v1/observability/health'),
-        fetch('http://localhost:8000/api/v1/observability/logs'),
-        fetch('http://localhost:8000/api/v1/observability/traces'),
-        fetch('http://localhost:8000/api/v1/observability/database'),
-        fetch('http://localhost:8000/api/v1/observability/runtime-state'),
+        fetch('/api/v1/observability/performance'),
+        fetch('/api/v1/observability/errors'),
+        fetch('/api/v1/observability/health'),
+        fetch('/api/v1/observability/logs'),
+        fetch('/api/v1/observability/traces'),
+        fetch('/api/v1/observability/database'),
+        fetch('/api/v1/observability/runtime-state'),
         fetch('http://localhost:6333/collections')
       ])
 

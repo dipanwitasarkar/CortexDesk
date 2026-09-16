@@ -23,7 +23,7 @@ function App() {
 
   const loadChats = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/chats?user_id=1')
+      const response = await fetch('/api/v1/chats?user_id=1')
       if (response.ok) {
         const data = await response.json()
         setChats(data)
@@ -35,7 +35,7 @@ function App() {
 
   const createNewChat = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/chats', {
+      const response = await fetch('/api/v1/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 1, title: 'New conversation' })

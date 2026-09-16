@@ -26,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     setDeletingChatId(chatId)
     
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/chats/${chatId}`, {
+      const response = await fetch(`/api/v1/chats/${chatId}`, {
         method: 'DELETE'
       })
       

@@ -28,7 +28,7 @@ const DocumentManager: React.FC = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/documents')
+      const response = await fetch('/api/v1/documents')
       if (response.ok) {
         const data = await response.json()
         setDocuments(data)
@@ -50,7 +50,7 @@ const DocumentManager: React.FC = () => {
     setUploading(true)
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/documents/text?title=${encodeURIComponent(uploadTitle)}&content=${encodeURIComponent(uploadContent)}`
+        `/api/v1/documents/text?title=${encodeURIComponent(uploadTitle)}&content=${encodeURIComponent(uploadContent)}`
       )
       if (response.ok) {
         const data = await response.json()
@@ -71,7 +71,7 @@ const DocumentManager: React.FC = () => {
     if (!confirm('Are you sure you want to delete this document?')) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/documents/${documentId}`, {
+      const response = await fetch(`/api/v1/documents/${documentId}`, {
         method: 'DELETE'
       })
       if (response.ok) {
@@ -88,7 +88,7 @@ const DocumentManager: React.FC = () => {
     setSearching(true)
     try {
       const response = await fetch(
-        `http://localhost:8000/api/v1/documents/search?query=${encodeURIComponent(searchQuery)}`
+        `/api/v1/documents/search?query=${encodeURIComponent(searchQuery)}`
       )
       if (response.ok) {
         const data = await response.json()
