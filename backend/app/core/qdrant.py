@@ -3,6 +3,10 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, Fi
 from app.core.config import settings
 from typing import List, Dict, Any, Optional
 import uuid
+import logging
+import httpx
+
+logger = logging.getLogger(__name__)
 
 
 class QdrantManager:
@@ -15,7 +19,7 @@ class QdrantManager:
             api_key=settings.qdrant_api_key if settings.qdrant_api_key else None
         )
 
-    async def create_collection(self, collection_name: str, vector_size: int = 1536):
+    async def create_collection(self, collection_name: str, vector_size: int = 384):
         if not self.client:
             self.connect()
         
@@ -39,20 +43,59 @@ class QdrantManager:
         if not self.client:
             self.connect()
         
-        qdrant_points = []
-        for point in points:
-            qdrant_points.append(
-                PointStruct(
-                    id=point.get("id", str(uuid.uuid4())),
-                    vector=point["vector"],
-                    payload=point.get("payload", {})
+        try:
+            # Convert to Qdrant format
+            qdrant_points = []
+            for point in points:
+                logger.info(f"Processing point: id={point.get('id')}, vector_type={type(point.get('vector'))}, vector_len={len(point.get('vector', []))}")
+                qdrant_points.append(
+                    PointStruct(
+                        id=point.get("id", str(uuid.uuid4())),
+                        vector=point["vector"],
+                        payload=point.get("payload", {})
+                    )
                 )
+            
+            logger.info(f"About to insert {len(qdrant_points)} points into {collection_name}")
+            
+            # Try using the direct client upsert
+            self.client.upsert(
+                collection_name=collection_name,
+                points=qdrant_points
             )
-        
-        self.client.upsert(
-            collection_name=collection_name,
-            points=qdrant_points
-        )
+            logger.info(f"Successfully inserted {len(qdrant_points)} points into {collection_name}")
+        except Exception as e:
+            logger.error(f"Failed to insert points into Qdrant: {e}")
+            logger.error(f"Vector type: {type(points[0]['vector']) if points else 'none'}")
+            logger.error(f"Vector length: {len(points[0]['vector']) if points else 'none'}")
+            logger.error(f"Vector first 5 values: {points[0]['vector'][:5] if points else 'none'}")
+            
+            # Fallback: Try using HTTP API directly with correct format
+            try:
+                logger.info("Attempting fallback using HTTP API directly")
+                async with httpx.AsyncClient() as client:
+                    url = f"{settings.qdrant_url}/collections/{collection_name}/points"
+                    # Use the correct Qdrant REST API format with integer IDs
+                    import hashlib
+                    payload = {
+                        "points": [
+                            {
+                                "id": int(hashlib.md5(point["id"].encode()).hexdigest()[:8], 16),  # Convert string ID to integer
+                                "vector": point["vector"],
+                                "payload": point["payload"]
+                            }
+                            for point in points
+                        ]
+                    }
+                    logger.info(f"HTTP API payload: {payload}")
+                    response = await client.put(url, json=payload)
+                    logger.info(f"HTTP API response status: {response.status_code}")
+                    logger.info(f"HTTP API response body: {response.text}")
+                    response.raise_for_status()
+                    logger.info(f"Successfully inserted {len(points)} points using HTTP API fallback")
+            except Exception as fallback_error:
+                logger.error(f"HTTP API fallback also failed: {fallback_error}")
+                raise
 
     async def search(
         self,

@@ -96,9 +96,14 @@ class DocumentService:
                         except Exception as e:
                             self.logger.error(f"Failed to generate embedding for chunk {i}: {e}")
                     
+                    self.logger.info(f"Generated {len(embeddings)} embeddings")
+                    self.logger.info(f"Sample embedding length: {len(embeddings[0]['vector']) if embeddings else 'none'}")
+                    self.logger.info(f"Sample embedding type: {type(embeddings[0]['vector']) if embeddings else 'none'}")
+                    self.logger.info(f"Sample embedding first 5 values: {embeddings[0]['vector'][:5] if embeddings else 'none'}")
+                    
                     # Store in Qdrant if embeddings were generated
                     if embeddings:
-                        await qdrant_manager.create_collection("documents")
+                        await qdrant_manager.create_collection("documents", vector_size=384)
                         points = [
                             {
                                 "id": emb["chunk_id"],
@@ -107,15 +112,17 @@ class DocumentService:
                             }
                             for emb in embeddings
                         ]
+                        self.logger.info(f"Inserting {len(points)} points into Qdrant")
+                        self.logger.info(f"Sample point: {points[0]}")
                         await qdrant_manager.insert_points("documents", points)
                 except Exception as e:
-                    self.logger.warning(f"Embedding generation failed (likely local model): {e}")
-                    # Mark as completed without embeddings for local models
+                    self.logger.error(f"Embedding generation/storage failed: {e}")
+                    # Mark as failed
                     embeddings = []
                 
                 # Update document status
                 document.chunk_count = chunk_count
-                document.embedding_status = "completed" if embeddings else "completed_no_embeddings"
+                document.embedding_status = "completed" if embeddings else "failed"
                 await db.commit()
                 
                 self.logger.info(f"Processed document {document_id}: {chunk_count} chunks, {len(embeddings)} embedded")
@@ -123,9 +130,9 @@ class DocumentService:
                 return {
                     "document_id": document_id,
                     "chunk_count": chunk_count,
-                    "embedding_status": "completed" if embeddings else "completed_no_embeddings",
+                    "embedding_status": "completed" if embeddings else "failed",
                     "chunks_processed": len(embeddings),
-                    "note": "Embeddings skipped for local model" if not embeddings else None
+                    "note": None if embeddings else "Embedding generation failed"
                 }
                 
             except Exception as e:

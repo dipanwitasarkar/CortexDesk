@@ -72,7 +72,7 @@ class MemoryService:
             await db.refresh(memory)
             
             # Store in Qdrant
-            await qdrant_manager.create_collection("ai_assistant_memory")
+            await qdrant_manager.create_collection("ai_assistant_memory", vector_size=384)
             await qdrant_manager.insert_points(
                 "ai_assistant_memory",
                 [{

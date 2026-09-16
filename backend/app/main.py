@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
     
     # Connect to Qdrant and create collection
     qdrant_manager.connect()
-    await qdrant_manager.create_collection(settings.qdrant_collection_name)
+    await qdrant_manager.create_collection(settings.qdrant_collection_name, vector_size=384)
     logger.info("Connected to Qdrant")
     
     # Start performance monitoring

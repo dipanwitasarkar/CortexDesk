@@ -5,6 +5,7 @@ from typing import List, Dict, Any, Optional
 import logging
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
+from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,15 @@ class LLMService:
                 logger.error(f"Failed to load local model: {e}")
                 raise
             
-            self.embedding_model = None
+            # Load local embedding model
+            try:
+                embedding_model_name = settings.dell_llm_embedding_model or "sentence-transformers/all-MiniLM-L6-v2"
+                logger.info(f"Loading local embedding model: {embedding_model_name}")
+                self.embedding_model = SentenceTransformer(embedding_model_name)
+                logger.info("Local embedding model loaded successfully")
+            except Exception as e:
+                logger.error(f"Failed to load local embedding model: {e}")
+                self.embedding_model = None
         # Check if using RunPod (OpenAI-compatible)
         elif "runpod.ai" in settings.dell_llm_endpoint:
             logger.info("Using RunPod Public Endpoints (OpenAI-compatible)")
@@ -273,8 +282,22 @@ class LLMService:
 
     async def generate_embedding(self, text: str) -> List[float]:
         """Generate embedding for text"""
-        if self.use_local or self.use_runpod or self.use_groq:
-            # Local, RunPod, and Groq don't have embedding API, use fallback
+        if self.use_local:
+            # Use local sentence-transformers model
+            if self.embedding_model is not None:
+                try:
+                    import numpy as np
+                    embedding = self.embedding_model.encode(text, convert_to_numpy=True)
+                    # Ensure it's a list of floats
+                    return embedding.tolist()
+                except Exception as e:
+                    logger.error(f"Local embedding error: {e}")
+                    return self._fallback_embedding(text)
+            else:
+                # Fallback if embedding model failed to load
+                return self._fallback_embedding(text)
+        elif self.use_runpod or self.use_groq:
+            # RunPod and Groq don't have embedding API, use fallback
             return self._fallback_embedding(text)
         elif self.use_huggingface:
             return await self._generate_hf_embedding(text)
@@ -316,8 +339,28 @@ class LLMService:
 
     async def generate_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         """Generate embeddings for multiple texts"""
-        if self.use_local or self.use_runpod or self.use_groq:
-            # Local, RunPod, and Groq don't have embedding API, use fallback
+        if self.use_local:
+            # Use local sentence-transformers model
+            if self.embedding_model is not None:
+                try:
+                    embeddings = self.embedding_model.encode(texts, convert_to_numpy=True)
+                    return embeddings.tolist()
+                except Exception as e:
+                    logger.error(f"Local batch embedding error: {e}")
+                    embeddings = []
+                    for text in texts:
+                        embedding = self._fallback_embedding(text)
+                        embeddings.append(embedding)
+                    return embeddings
+            else:
+                # Fallback if embedding model failed to load
+                embeddings = []
+                for text in texts:
+                    embedding = self._fallback_embedding(text)
+                    embeddings.append(embedding)
+                return embeddings
+        elif self.use_runpod or self.use_groq:
+            # RunPod and Groq don't have embedding API, use fallback
             embeddings = []
             for text in texts:
                 embedding = self._fallback_embedding(text)

@@ -56,9 +56,10 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 - **Document Upload**: Add text documents, notes, and knowledge base content
 - **Automatic Chunking**: Intelligent text segmentation for optimal retrieval
 - **Semantic Search**: Find relevant documents using vector similarity
-- **Embedding Support**: Compatible with Groq/RunPod for full RAG capabilities
+- **Local Embeddings**: Full RAG support with sentence-transformers/all-MiniLM-L6-v2
 - **Document Status**: Track embedding status and chunk count
 - **Search Interface**: Query documents with relevance scoring
+- **Qdrant Integration**: Vector storage with 384-dimensional embeddings
 
 ### 🔧 Core Capabilities
 
@@ -95,8 +96,10 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 ### 🛡️ Security & Privacy
 
 - **Local-First Data Storage**: All data stored locally
-- **Separate Storage Layers**: PostgreSQL for business data, Redis for runtime state, Qdrant for AI memory
+- **Separate Storage Layers**: PostgreSQL for business data + observability, Redis for runtime state, Qdrant for AI memory
 - **Security Guardrails**: Input validation and tool risk classification
+- **No External API Calls**: Works completely offline with local models
+- **Local Embeddings**: sentence-transformers/all-MiniLM-L6-v2 for semantic search without external dependencies
 - **Encrypted Storage**: Secure credential and data handling
 - **Access Control**: File system and command execution permissions
 - **Observability Data Management**: Flexible pruning and deletion of logs/traces/metrics
@@ -196,11 +199,12 @@ npm run electron:dev
 **Databases:**
 - PostgreSQL - Business data + observability (logs, traces, metrics)
 - Redis - Runtime state (2GB limit, allkeys-lru eviction)
-- Qdrant - Vector database for RAG and AI memory
+- Qdrant v1.12.0 - Vector database for RAG and AI memory
 
-**Infrastructure:**
-- Docker - Container orchestration
-- Local LLM (gpt2) - AI model inference (upgradeable to Groq/RunPod)
+**AI Models:**
+- **Generation:** GPT-2 (local) / Groq / RunPod
+- **Embeddings:** sentence-transformers/all-MiniLM-L6-v2 (local)
+- **Purpose:** Chat, agent reasoning, summarization, planning, document embeddings, semantic search, RAG
 
 ### System Architecture
 
@@ -320,20 +324,23 @@ Create `.env` file in backend directory:
 
 ```env
 # LLM Configuration (Choose one)
-# Option 1: Local gpt2 (default, free, limited)
+# Option 1: Local GPT-2 + sentence-transformers (default, free, full RAG)
 DELL_LLM_ENDPOINT=local
 DELL_LLM_API_KEY=
 DELL_LLM_MODEL=gpt2
+DELL_LLM_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 
 # Option 2: Groq (free, fast, better quality)
 # DELL_LLM_ENDPOINT=https://api.groq.com/openai/v1
 # DELL_LLM_API_KEY=your-groq-api-key
 # DELL_LLM_MODEL=llama-3.1-8b-instant
+# DELL_LLM_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 
 # Option 3: RunPod (paid, excellent quality)
 # DELL_LLM_ENDPOINT=https://api.runpod.ai/v2
 # DELL_LLM_API_KEY=your-runpod-api-key
 # DELL_LLM_MODEL=qwen-32b-chat
+# DELL_LLM_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
 
 # Database Configuration
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/ai_assistant
@@ -503,18 +510,21 @@ All Phase 1 MVP features are complete:
 - Flexible data management with delete/prune options
 - System health monitoring and performance metrics
 
-**Document Management:**
+**Document Management with RAG:**
 - Document upload with automatic chunking
+- Local embeddings with sentence-transformers/all-MiniLM-L6-v2
 - Semantic search with vector similarity
-- Embedding support (requires Groq/RunPod)
+- Qdrant v1.12.0 vector storage with 384-dimensional embeddings
 - Document status tracking (pending, processing, completed, failed)
 - Search interface with relevance scoring
+- Full RAG support without external dependencies
 
 **Storage Architecture:**
 - PostgreSQL for business data and observability
 - Redis with 2GB limit and allkeys-lru eviction
 - Configurable TTLs for different state types
-- Qdrant for AI memory and document embeddings
+- Qdrant v1.12.0 for AI memory and document embeddings
+- Local-first approach with complete offline capability
 
 ### Success Criteria: ✅ 10/10
 

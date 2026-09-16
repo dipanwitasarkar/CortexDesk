@@ -4,11 +4,11 @@ import os
 
 
 class Settings(BaseSettings):
-    # Dell LLM Configuration
+    # LLM Configuration
     dell_llm_endpoint: str
     dell_llm_api_key: str
-    dell_llm_model: str = "gpt-4"
-    dell_llm_embedding_model: str = "text-embedding-ada-002"
+    dell_llm_model: str = "gpt2"
+    dell_llm_embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
 
     # Database Configuration
     database_url: str
