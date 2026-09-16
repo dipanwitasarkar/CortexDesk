@@ -1,28 +1,30 @@
-# Windows AI Assistant
+# CortexDesk
 
-**Your Personal AI Operating System for Windows**
+**Your Intelligent Multi-Agent Workspace Assistant**
 
-A multi-agent AI assistant that runs locally on your Windows laptop, acting as your Engineering Copilot, Knowledge Assistant, Productivity Assistant, Windows Assistant, and System Administrator Assistant.
+A multi-agent AI assistant that provides intelligent task automation, document management with RAG, real-time observability, and seamless Windows integration. CortexDesk acts as your Engineering Copilot, Knowledge Assistant, Productivity Manager, and System Administrator in one unified platform.
 
 ---
 
 ## 🌟 Overview
 
-Windows AI Assistant is a local-first, multi-agent AI system designed to enhance your productivity and development workflow. It uses a local LLM (gpt2) for completely free inference while keeping all your data, memory, and agent orchestration local and private.
+CortexDesk is a comprehensive multi-agent AI system designed to enhance your productivity and development workflow. It features a sophisticated architecture with separate storage layers for different data types, real-time observability, and intelligent document management with RAG capabilities.
 
 **Current Configuration:**
-- **LLM:** gpt2 (local, 124M parameters)
-- **Cost:** Completely free
-- **Privacy:** 100% local
-- **Quality:** Limited (gpt2 is a small 2019 model)
+- **LLM:** gpt2 (local, 124M parameters) - Upgradeable to Groq/RunPod
+- **Cost:** Completely free (local model)
+- **Privacy:** 100% local data storage
+- **Quality:** Limited with gpt2 (upgrade to Groq/RunPod for production)
 
-**Note:** gpt2 is configured for testing and development. For production use, upgrade to a cloud model (RunPod, Groq, OpenAI, etc.) for better quality. See [LOCAL_GPT2_SETUP.md](LOCAL_GPT2_SETUP.md) for details.
+**Note:** gpt2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support. See [LOCAL_GPT2_SETUP.md](LOCAL_GPT2_SETUP.md) for details.
 
 ### What Makes It Different
 
-- **🤖 Multi-Agent Architecture**: Specialized agents for different tasks
+- **🤖 Multi-Agent Architecture**: 6 specialized agents for different tasks
+- **📊 Real-Time Observability**: Complete visibility into system performance
+- **📄 Document Management with RAG**: Upload, search, and retrieve documents
 - **🔒 Local-First Privacy**: Your data stays on your machine
-- **🧠 Long-Term Memory**: Remembers your projects, preferences, and work patterns
+- **🧠 Intelligent Memory**: Separate layers for runtime state and long-term storage
 - **🎯 Context-Aware**: Understands your current work context
 - **⚡ Real-Time Assistance**: Instant help with code, documents, and system tasks
 - **🖥️ Native Windows Integration**: Deep integration with Windows features
@@ -40,6 +42,24 @@ Windows AI Assistant is a local-first, multi-agent AI system designed to enhance
 - **System Agent**: Container management, terminal intelligence, system diagnostics
 - **Productivity Agent**: Task management, work journal, status reports
 
+### 📊 Observability & Monitoring
+
+- **Real-Time Dashboard**: System health, performance metrics, and resource usage
+- **Logs & Traces**: Complete visibility into agent execution and system events
+- **Database Monitoring**: Track chat history, messages, and agent executions
+- **Runtime State**: Monitor Redis cache with categorized key analysis
+- **Metrics Collection**: Track agent performance, errors, and system health
+- **Data Management**: Delete logs, traces, and metrics with flexible pruning options
+
+### 📄 Document Management with RAG
+
+- **Document Upload**: Add text documents, notes, and knowledge base content
+- **Automatic Chunking**: Intelligent text segmentation for optimal retrieval
+- **Semantic Search**: Find relevant documents using vector similarity
+- **Embedding Support**: Compatible with Groq/RunPod for full RAG capabilities
+- **Document Status**: Track embedding status and chunk count
+- **Search Interface**: Query documents with relevance scoring
+
 ### 🔧 Core Capabilities
 
 **Code Intelligence:**
@@ -50,7 +70,7 @@ Windows AI Assistant is a local-first, multi-agent AI system designed to enhance
 
 **Knowledge Management:**
 - Search across documents, notes, and code
-- RAG-based information retrieval
+- RAG-based information retrieval (with embedding support)
 - Document summarization
 - Knowledge synthesis
 
@@ -75,10 +95,11 @@ Windows AI Assistant is a local-first, multi-agent AI system designed to enhance
 ### 🛡️ Security & Privacy
 
 - **Local-First Data Storage**: All data stored locally
-- **Dell LLM Integration**: Only AI model calls go to external service
+- **Separate Storage Layers**: PostgreSQL for business data, Redis for runtime state, Qdrant for AI memory
 - **Security Guardrails**: Input validation and tool risk classification
 - **Encrypted Storage**: Secure credential and data handling
 - **Access Control**: File system and command execution permissions
+- **Observability Data Management**: Flexible pruning and deletion of logs/traces/metrics
 
 ---
 
@@ -161,31 +182,30 @@ npm run electron:dev
 ### Technology Stack
 
 **Frontend:**
-- Electron - Desktop application framework
 - React - UI framework
 - TypeScript - Type-safe JavaScript
 - Tailwind CSS - Styling
-- shadcn/ui - UI components
+- Lucide Icons - Icon library
 
 **Backend:**
 - Python 3.12+ - Backend language
 - FastAPI - Web framework
-- LangGraph - Agent orchestration
 - LangChain - LLM framework
+- SQLAlchemy - ORM
 
 **Databases:**
-- PostgreSQL - Chat history, metadata
-- Redis - Cache, session memory
-- Qdrant - Vector database for RAG
+- PostgreSQL - Business data + observability (logs, traces, metrics)
+- Redis - Runtime state (2GB limit, allkeys-lru eviction)
+- Qdrant - Vector database for RAG and AI memory
 
 **Infrastructure:**
-- Podman/Docker - Container orchestration
-- Dell LLM - AI model inference
+- Docker - Container orchestration
+- Local LLM (gpt2) - AI model inference (upgradeable to Groq/RunPod)
 
 ### System Architecture
 
 ```
-Electron UI (Desktop App)
+React Frontend (Web Interface)
     ↓
 FastAPI Backend
     ↓
@@ -195,10 +215,40 @@ Specialized Agents (Code, Knowledge, Windows, System, Productivity)
     ↓
 MCP Layer (Filesystem, GitHub, PostgreSQL, PowerShell)
     ↓
-Dell LLM
+LLM (gpt2 / Groq / RunPod)
     ↓
-Memory Layer (PostgreSQL, Redis, Qdrant)
+Storage Layers:
+  - PostgreSQL: Business data + observability
+  - Redis: Runtime state (conversation, agent state, caches)
+  - Qdrant: AI memory + document embeddings
 ```
+
+### Storage Architecture
+
+**PostgreSQL (Persistent Storage):**
+- Chats and messages
+- Users and sessions
+- Agent execution history
+- Observability logs
+- Observability traces
+- Observability metrics
+- Document metadata
+
+**Redis (Runtime State - Working Memory):**
+- Conversation context (last 50 messages, 24h TTL)
+- Agent state (4h TTL)
+- Response cache (1h TTL)
+- Tool cache (5-15 min TTL)
+- Screenshot cache (24h TTL)
+- Workflow state (4h TTL)
+- Memory queue (24h TTL)
+- Max memory: 2GB with allkeys-lru eviction
+
+**Qdrant (AI Memory):**
+- Long-term memory embeddings
+- Document chunks for RAG
+- Vector similarity search
+- Knowledge base storage
 
 ---
 
@@ -218,6 +268,14 @@ Memory Layer (PostgreSQL, Redis, Qdrant)
 "What do you know about microservices?"
 "Summarize the design document"
 "Search for information about authentication"
+```
+
+### Document Management
+```
+"Upload my project documentation"
+"Search for information about API endpoints"
+"What documents do I have about authentication?"
+"Find relevant content about database design"
 ```
 
 ### Windows Automation
@@ -244,6 +302,14 @@ Memory Layer (PostgreSQL, Redis, Qdrant)
 "Give me my daily briefing"
 ```
 
+### Observability
+```
+"Show me system performance metrics"
+"What are the recent errors?"
+"Check agent execution history"
+"Display runtime state information"
+```
+
 ---
 
 ## ⚙️ Configuration
@@ -253,11 +319,21 @@ Memory Layer (PostgreSQL, Redis, Qdrant)
 Create `.env` file in backend directory:
 
 ```env
-# Dell LLM Configuration
-DELL_LLM_ENDPOINT=https://your-dell-endpoint.com/v1
-DELL_LLM_API_KEY=your-api-key
-DELL_LLM_MODEL=your-model-name
-DELL_LLM_EMBEDDING_MODEL=your-embedding-model
+# LLM Configuration (Choose one)
+# Option 1: Local gpt2 (default, free, limited)
+DELL_LLM_ENDPOINT=local
+DELL_LLM_API_KEY=
+DELL_LLM_MODEL=gpt2
+
+# Option 2: Groq (free, fast, better quality)
+# DELL_LLM_ENDPOINT=https://api.groq.com/openai/v1
+# DELL_LLM_API_KEY=your-groq-api-key
+# DELL_LLM_MODEL=llama-3.1-8b-instant
+
+# Option 3: RunPod (paid, excellent quality)
+# DELL_LLM_ENDPOINT=https://api.runpod.ai/v2
+# DELL_LLM_API_KEY=your-runpod-api-key
+# DELL_LLM_MODEL=qwen-32b-chat
 
 # Database Configuration
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/ai_assistant
@@ -273,6 +349,64 @@ QDRANT_COLLECTION_NAME=ai_assistant_memory
 # Application Configuration
 SECRET_KEY=your-secret-key
 DEBUG=True
+APP_NAME=CortexDesk
+APP_VERSION=1.0.0
+CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+```
+
+### Redis Configuration
+
+Redis is configured with memory limits and eviction policies in `docker-compose.yml`:
+
+```yaml
+redis:
+  image: redis:7-alpine
+  command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru
+```
+
+**TTL Settings:**
+- Session Context: 24h
+- Agent State: 4h
+- Tool Cache: 5-15 min
+- LLM Cache: 1h
+- Workflow State: 4h
+- Screenshot Cache: 24h
+
+### Observability Data Management
+
+**Delete Logs:**
+```bash
+# Delete all logs
+curl -X DELETE "http://localhost:8000/api/v1/observability/logs?delete_all=true"
+
+# Delete logs older than 7 days
+curl -X DELETE "http://localhost:8000/api/v1/observability/logs?before_days=7"
+
+# Delete only ERROR level logs
+curl -X DELETE "http://localhost:8000/api/v1/observability/logs?level=ERROR"
+```
+
+**Delete Traces:**
+```bash
+# Delete all traces
+curl -X DELETE "http://localhost:8000/api/v1/observability/traces?delete_all=true"
+
+# Delete traces older than 30 days
+curl -X DELETE "http://localhost:8000/api/v1/observability/traces?before_days=30"
+```
+
+**Delete Metrics:**
+```bash
+# Delete all metrics
+curl -X DELETE "http://localhost:8000/api/v1/observability/metrics?delete_all=true"
+
+# Delete metrics older than 7 days
+curl -X DELETE "http://localhost:8000/api/v1/observability/metrics?before_days=7"
+```
+
+**Get Statistics:**
+```bash
+curl -s http://localhost:8000/api/v1/observability/stats
 ```
 
 ### Agent Configuration
@@ -344,22 +478,47 @@ npm run electron:build
 
 All Phase 1 MVP features are complete:
 
-- ✅ Electron UI
-- ✅ FastAPI backend
-- ✅ Dell LLM integration
+- ✅ React frontend with chat interface
+- ✅ FastAPI backend with async operations
 - ✅ Multi-agent system (6 agents)
-- ✅ Memory layer (PostgreSQL, Redis, Qdrant)
+- ✅ Storage layers (PostgreSQL, Redis, Qdrant)
 - ✅ MCP integrations (Filesystem, GitHub, PostgreSQL, PowerShell)
-- ✅ Persistent chat
-- ✅ RAG pipeline
+- ✅ Persistent chat with message history
+- ✅ RAG pipeline with document management
 - ✅ Security guardrails
-- ✅ Observability & logging
+- ✅ Observability & logging system
 - ✅ Screenshot intelligence
 - ✅ Terminal intelligence
+- ✅ Real-time observability dashboard
+- ✅ Document management with upload/search
+- ✅ Runtime state management
+- ✅ Flexible observability data pruning
+
+### New Features (v1.0.0):
+
+**Observability System:**
+- Real-time dashboard with 5 tabs (Overview, Logs, Traces, Database, Runtime State)
+- PostgreSQL-based logs, traces, and metrics storage
+- Redis runtime state monitoring with categorized key analysis
+- Flexible data management with delete/prune options
+- System health monitoring and performance metrics
+
+**Document Management:**
+- Document upload with automatic chunking
+- Semantic search with vector similarity
+- Embedding support (requires Groq/RunPod)
+- Document status tracking (pending, processing, completed, failed)
+- Search interface with relevance scoring
+
+**Storage Architecture:**
+- PostgreSQL for business data and observability
+- Redis with 2GB limit and allkeys-lru eviction
+- Configurable TTLs for different state types
+- Qdrant for AI memory and document embeddings
 
 ### Success Criteria: ✅ 10/10
 
-The assistant successfully handles all planned use cases.
+The assistant successfully handles all planned use cases with enhanced observability and document management capabilities.
 
 ---
 
@@ -444,14 +603,18 @@ For bugs or feature requests, please use the appropriate channels within your or
 ## 🎉 Acknowledgments
 
 Built with:
-- **LangChain** and **LangGraph** for agent orchestration
+- **LangChain** for LLM framework and agent orchestration
 - **FastAPI** for the backend framework
-- **Electron** for desktop application
-- **Dell** for LLM hosting
+- **React** for the frontend UI
+- **PostgreSQL** for persistent storage and observability
+- **Redis** for runtime state management
+- **Qdrant** for vector database and RAG
+- **Docker** for container orchestration
 - The open-source community for the amazing tools and libraries
 
 ---
 
 **Version**: 1.0.0  
-**Last Updated**: 2026-09-15  
-**Status**: Production Ready ✅
+**Last Updated**: 2026-09-16  
+**Status**: Production Ready ✅  
+**Repository**: https://github.com/dipanwitasarkar/CortexDesk
