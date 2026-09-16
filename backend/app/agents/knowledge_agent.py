@@ -72,14 +72,14 @@ Be thorough in your search and provide well-sourced, accurate information."""
                     chat_history=[]
                 )
                 
-                return response
+                return {"response": response}
             except Exception as llm_error:
                 # Fallback if LLM fails
-                return f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."
+                return {"response": f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."}
                 
         except Exception as e:
             # Fallback response if anything fails
-            return f"I can help with basic questions about '{user_message}'. Note: Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."
+            return {"response": f"I can help with basic questions about '{user_message}'. Note: Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM."}
 
     async def _classify_task(self, user_message: str, context: Dict[str, Any]) -> str:
         """Classify the type of knowledge task"""
