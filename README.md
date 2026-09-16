@@ -8,26 +8,30 @@ A multi-agent AI assistant that provides intelligent task automation, document m
 
 ## 🌟 Overview
 
-CortexDesk is a comprehensive multi-agent AI system designed to enhance your productivity and development workflow. It features a sophisticated architecture with separate storage layers for different data types, real-time observability, and intelligent document management with RAG capabilities.
+CortexDesk is a comprehensive multi-agent AI system designed to enhance your productivity and development workflow. It features a sophisticated architecture with separate storage layers for different data types, real-time observability, intelligent document management with RAG capabilities, and a modern React-based frontend with comprehensive UX improvements.
 
 **Current Configuration:**
-- **LLM:** gpt2 (local, 124M parameters) - Upgradeable to Groq/RunPod
-- **Cost:** Completely free (local model)
+- **Generation Model:** GPT-2 (local, 124M parameters) - Upgradeable to Groq/RunPod
+- **Embedding Model:** sentence-transformers/all-MiniLM-L6-v2 (local, 384 dimensions)
+- **Cost:** Completely free (local models)
 - **Privacy:** 100% local data storage
 - **Quality:** Limited with gpt2 (upgrade to Groq/RunPod for production)
 
-**Note:** gpt2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support.
+**Note:** GPT-2 is configured for testing and development. For production use, upgrade to a cloud model (Groq, RunPod, OpenAI) for better quality and embedding support.
 
 ### What Makes It Different
 
-- **🤖 Multi-Agent Architecture**: 6 specialized agents for different tasks
-- **📊 Real-Time Observability**: Complete visibility into system performance
-- **📄 Document Management with RAG**: Upload, search, and retrieve documents
+- **🤖 Multi-Agent Architecture**: 6 specialized agents with full orchestration and logging
+- **📊 Real-Time Observability**: Complete visibility into system performance with auto-refresh and filtering
+- **📄 Document Management with RAG**: Upload, search, and retrieve documents with local embeddings
 - **🔒 Local-First Privacy**: Your data stays on your machine
 - **🧠 Intelligent Memory**: Separate layers for runtime state and long-term storage
 - **🎯 Context-Aware**: Understands your current work context
 - **⚡ Real-Time Assistance**: Instant help with code, documents, and system tasks
 - **🖥️ Native Windows Integration**: Deep integration with Windows features
+- **🎨 Modern UX**: Toast notifications, keyboard shortcuts, accessibility features, loading states
+- **🔌 MCP Integration**: Manage and monitor Model Context Protocol integrations
+- **🗑️ Data Management**: Purge old observability data to manage storage
 
 ---
 
@@ -103,6 +107,20 @@ CortexDesk is a comprehensive multi-agent AI system designed to enhance your pro
 - **Encrypted Storage**: Secure credential and data handling
 - **Access Control**: File system and command execution permissions
 - **Observability Data Management**: Flexible pruning and deletion of logs/traces/metrics
+- **Configuration Validation**: Startup validation for required settings
+- **Secret Key Management**: Secure secret key generation and validation
+
+### 🎨 User Experience
+
+- **Toast Notifications**: Success, error, warning, and info messages
+- **Keyboard Shortcuts**: Ctrl+N (new chat), Ctrl+D (documents), Ctrl+O (observability), Ctrl+M (MCP), ? (about)
+- **Loading States**: Skeleton loaders and progress indicators
+- **Error Handling**: User-friendly error messages with retry mechanisms
+- **Accessibility**: Screen reader support, keyboard navigation, high contrast mode
+- **Real-Time Updates**: Auto-refresh with configurable intervals
+- **Data Filtering**: Search and filter logs and traces
+- **Drag-and-Drop**: File upload with drag-and-drop support
+- **Status Indicators**: Visual status for MCP integrations and connections
 
 ---
 

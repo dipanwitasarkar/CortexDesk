@@ -263,9 +263,9 @@ function App() {
                     <div>
                       <h4 className="font-semibold text-blue-400 mb-2">Agents</h4>
                       <ul className="space-y-1 text-gray-400">
-                        <li>• <span className="text-white">Supervisor</span> - Orchestrates other agents</li>
-                        <li>• <span className="text-white">Knowledge</span> - Retrieves information</li>
-                        <li>• <span className="text-white">Code</span> - Code assistance</li>
+                        <li>• <span className="text-white">Supervisor</span> - Orchestrates other agents with full logging</li>
+                        <li>• <span className="text-white">Knowledge</span> - Retrieves information with RAG</li>
+                        <li>• <span className="text-white">Code</span> - Code assistance and analysis</li>
                         <li>• <span className="text-white">Windows</span> - Windows automation</li>
                         <li>• <span className="text-white">System</span> - System operations</li>
                         <li>• <span className="text-white">Productivity</span> - Task management</li>
@@ -276,11 +276,45 @@ function App() {
                       <ul className="space-y-1 text-gray-400">
                         <li>• <span className="text-white">PostgreSQL</span> - Business data + observability</li>
                         <li>• <span className="text-white">Redis</span> - Runtime state (2GB, allkeys-lru)</li>
-                        <li>• <span className="text-white">Qdrant v1.12.0</span> - Vector database</li>
+                        <li>• <span className="text-white">Qdrant v1.12.0</span> - Vector database (384-dim)</li>
                         <li>• <span className="text-white">FastAPI</span> - Backend API</li>
-                        <li>• <span className="text-white">React</span> - Frontend UI</li>
-                        <li>• <span className="text-white">GPT-2</span> - Local generation</li>
-                        <li>• <span className="text-white">sentence-transformers</span> - Local embeddings</li>
+                        <li>• <span className="text-white">React</span> - Frontend UI with modern UX</li>
+                        <li>• <span className="text-white">GPT-2</span> - Local generation (124M params)</li>
+                        <li>• <span className="text-white">sentence-transformers</span> - Local embeddings (384-dim)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Features */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-gray-300 flex items-center gap-2">
+                  <Cpu className="w-5 h-5" />
+                  Key Features
+                </h3>
+                <div className="bg-gray-900 rounded p-4 text-sm text-gray-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-semibold text-yellow-400 mb-2">User Experience</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• Toast notifications for feedback</li>
+                        <li>• Keyboard shortcuts (Ctrl+N, D, O, M)</li>
+                        <li>• Loading states with skeleton loaders</li>
+                        <li>• Accessibility features (screen reader)</li>
+                        <li>• Real-time updates with auto-refresh</li>
+                        <li>• Data filtering and search</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-pink-400 mb-2">Observability</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• Real-time performance monitoring</li>
+                        <li>• Detailed agent execution logs</li>
+                        <li>• Request traces with timing</li>
+                        <li>• Database statistics</li>
+                        <li>• Qdrant vector database view</li>
+                        <li>• Data purge management</li>
                       </ul>
                     </div>
                   </div>
