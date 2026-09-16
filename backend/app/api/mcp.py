@@ -40,6 +40,23 @@ class MCPIntegrationResponse(BaseModel):
     
     class Config:
         from_attributes = True
+    
+    @classmethod
+    def from_orm(cls, obj: MCPIntegration) -> "MCPIntegrationResponse":
+        """Convert SQLAlchemy model to Pydantic model"""
+        return cls(
+            id=obj.id,
+            name=obj.name,
+            type=obj.type,
+            config=obj.config or {},
+            enabled=obj.enabled,
+            status=obj.status,
+            last_connected=obj.last_connected.isoformat() if obj.last_connected else None,
+            last_error=obj.last_error,
+            description=obj.description,
+            created_at=obj.created_at.isoformat() if obj.created_at else "",
+            updated_at=obj.updated_at.isoformat() if obj.updated_at else None
+        )
 
 
 @router.get("/mcp/integrations", response_model=List[MCPIntegrationResponse])
@@ -49,7 +66,7 @@ async def list_integrations(
 ):
     """List all MCP integrations"""
     integrations = await mcp_service.list_integrations(db, enabled_only=enabled_only)
-    return integrations
+    return [MCPIntegrationResponse.from_orm(integration) for integration in integrations]
 
 
 @router.get("/mcp/integrations/{integration_id}", response_model=MCPIntegrationResponse)
@@ -64,7 +81,7 @@ async def get_integration(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="MCP integration not found"
         )
-    return integration
+    return MCPIntegrationResponse.from_orm(integration)
 
 
 @router.post("/mcp/integrations", response_model=MCPIntegrationResponse, status_code=status.HTTP_201_CREATED)
@@ -81,7 +98,7 @@ async def create_integration(
             config=integration.config,
             description=integration.description
         )
-        return new_integration
+        return MCPIntegrationResponse.from_orm(new_integration)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -111,7 +128,7 @@ async def update_integration(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="MCP integration not found"
             )
-        return updated_integration
+        return MCPIntegrationResponse.from_orm(updated_integration)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

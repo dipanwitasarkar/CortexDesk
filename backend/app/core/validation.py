@@ -30,6 +30,13 @@ class AppConfigValidation(BaseModel):
                 "SECRET_KEY must be changed from the default value. "
                 "Please set a secure random string in your .env file."
             )
+        if v == "change-this-to-a-secure-random-string-in-production":
+            # Allow the example value but warn
+            import warnings
+            warnings.warn(
+                "SECRET_KEY is set to the example value. "
+                "Please change it to a secure random string in production."
+            )
         if len(v) < 32:
             raise ValueError(
                 "SECRET_KEY must be at least 32 characters long for security."
