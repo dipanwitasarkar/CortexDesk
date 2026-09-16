@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
-from app.core.database import async_engine, Base
+from app.core.database import async_engine, Base, get_async_db
 from app.core.redis import redis_manager
 from app.core.qdrant import qdrant_manager
 from app.core.validation import validate_config, ConfigurationError
@@ -16,9 +16,10 @@ from app.api.llm_config import router as llm_config_router
 from app.services.observability import logger, performance_monitor, error_tracker
 from app.models.chat import Chat, Message
 from app.models.user import User
-from app.models.memory import Memory, AgentExecution
+from app.models.memory import Memory, AgentExecution, LLMConfiguration, LLMProvider
 from app.models.document import Document
 from app.models.mcp import MCPIntegration
+from sqlalchemy import select
 
 
 @asynccontextmanager
@@ -40,6 +41,38 @@ async def lifespan(app: FastAPI):
     async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created")
+    
+    # Initialize default LLM configurations for all users
+    async for db in get_async_db():
+        # Get all users
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        
+        for user in users:
+            # Check if user has any LLM configuration
+            config_result = await db.execute(
+                select(LLMConfiguration)
+                .where(LLMConfiguration.user_id == user.id)
+            )
+            configs = config_result.scalars().all()
+            
+            # If no configuration exists, create default local configuration
+            if len(configs) == 0:
+                default_config = LLMConfiguration(
+                    user_id=user.id,
+                    provider=LLMProvider.LOCAL,
+                    model_name="gpt2",
+                    endpoint=None,
+                    api_key=None,
+                    temperature=0.7,
+                    max_tokens=1000,
+                    is_active=True
+                )
+                db.add(default_config)
+                await db.commit()
+                logger.info(f"Created default LLM configuration for user {user.id}")
+        
+        logger.info("Default LLM configurations initialized")
     
     # Connect to Redis
     await redis_manager.connect()
