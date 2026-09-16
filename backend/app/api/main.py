@@ -280,11 +280,15 @@ async def assistant(
     
     # Store assistant response
     agent_result = result["result"]
+    agents_used = agent_result.get("agents_used", ["supervisor"])
+    # Use the first sub-agent if available, otherwise use supervisor
+    actual_agent = agents_used[0] if agents_used and agents_used[0] != "supervisor" else "supervisor"
+    
     assistant_message = Message(
         chat_id=chat.id,
         role=MessageRole.ASSISTANT,
         content=agent_result.get("response", ""),
-        agent_used="supervisor",
+        agent_used=actual_agent,
         tool_calls=json.dumps(agent_result.get("agent_results", [])) if agent_result.get("agent_results") else None,
         meta_data=json.dumps({
             "agents_used": agent_result.get("agents_used", []),

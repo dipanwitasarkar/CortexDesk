@@ -47,28 +47,47 @@ Be thorough in your search and provide well-sourced, accurate information."""
         user_message = input_data.get("message", "")
         user_id = input_data.get("user_id")
         context = input_data.get("context", {})
-        agent_plan = input_data.get("agent_plan", {})
+        agent_plan = input_data.get("agent_plan", "")
         
-        # For local gpt2 setup, skip vector search and provide a simple response
+        # Try to retrieve from memory
         try:
-            # Try to retrieve from memory without vector search
             memories = await memory_service.get_memories(user_id, limit=5)
             
             if memories:
                 memory_context = "\n".join([m.content for m in memories])
-                response = f"Based on your stored information:\n{memory_context}\n\nFor '{user_message}', I can provide basic assistance. Note: Advanced semantic search is not available with the local gpt2 model."
+                context_prompt = f"Based on your stored information:\n{memory_context}\n\nUser question: {user_message}"
             else:
-                response = f"I don't have any stored information yet. For '{user_message}', I can provide basic assistance. Note: Advanced semantic search is not available with the local gpt2 model."
+                context_prompt = f"User question: {user_message}"
             
-            return {
-                "success": True,
-                "response": response,
-                "agent_used": self.name,
-                "metadata": {
-                    "memories_found": len(memories) if memories else 0,
-                    "embedding_disabled": True
+            # Use LLM to generate a response
+            try:
+                response = await llm_service.generate_simple_response(
+                    message=context_prompt,
+                    context=context,
+                    chat_history=[]
+                )
+                
+                return {
+                    "success": True,
+                    "response": response,
+                    "agent_used": self.name,
+                    "metadata": {
+                        "memories_found": len(memories) if memories else 0,
+                        "llm_used": True
+                    }
                 }
-            }
+            except Exception as llm_error:
+                # Fallback if LLM fails
+                return {
+                    "success": True,
+                    "response": f"I can help with basic questions about '{user_message}'. Advanced knowledge retrieval features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
+                    "agent_used": self.name,
+                    "metadata": {
+                        "error": str(llm_error),
+                        "llm_failed": True
+                    }
+                }
+                
         except Exception as e:
             # Fallback response if anything fails
             return {
@@ -80,18 +99,6 @@ Be thorough in your search and provide well-sourced, accurate information."""
                     "embedding_disabled": True
                 }
             }
-        
-        # Rest of the code is disabled for local gpt2 setup
-        # Advanced features require proper embeddings and more powerful LLM
-        return {
-            "success": True,
-            "response": f"Basic knowledge assistance for: '{user_message}'. Advanced features disabled for local gpt2 model.",
-            "agent_used": self.name,
-            "metadata": {
-                "embedding_disabled": True,
-                "local_mode": True
-            }
-        }
 
     async def _classify_task(self, user_message: str, context: Dict[str, Any]) -> str:
         """Classify the type of knowledge task"""

@@ -1,6 +1,7 @@
 from app.agents.base_agent import BaseAgent
 from app.mcp.filesystem_mcp import FilesystemMCP
 from app.mcp.github_mcp import GitHubMCP
+from app.services.llm_service import llm_service
 from typing import Dict, Any, List, Optional
 import json
 
@@ -275,25 +276,37 @@ Provide:
     async def _handle_general_code_task(self, user_message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Handle general code-related questions"""
         
-        prompt = f"""Answer this code-related question:
+        try:
+            # Use LLM to generate a response
+            prompt = f"""Answer this code-related question:
 
 {user_message}
 
 Context: {json.dumps(context, indent=2) if context else "None"}
 
 Provide a clear, helpful response with code examples if relevant."""
-
-        messages = [{"role": "user", "content": prompt}]
-        response = await self.call_llm(messages, temperature=0.5)
-        
-        return {
-            "response": response
-        }
+            
+            response = await llm_service.generate_simple_response(
+                message=prompt,
+                context=context,
+                chat_history=[]
+            )
+            
+            return {
+                "response": response
+            }
+        except Exception as e:
+            # Fallback response if LLM fails
+            return {
+                "response": f"I can help with basic code questions about '{user_message}'. Advanced code analysis features are limited with the local gpt2 model. For full functionality, consider using a more powerful LLM.",
+                "error": str(e)
+            }
 
     async def _extract_search_params(self, user_message: str) -> Dict[str, Any]:
         """Extract search parameters from user message"""
         
-        prompt = f"""Extract search parameters from this request:
+        try:
+            prompt = f"""Extract search parameters from this request:
 
 {user_message}
 
@@ -304,19 +317,26 @@ Respond in JSON format with these fields:
 - repo: repository name (if applicable)
 - path: local path to search (if applicable)
 - pattern: file pattern (if applicable)"""
-
-        messages = [{"role": "user", "content": prompt}]
-        response = await self.call_llm(messages, temperature=0.3)
-        
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError:
+            
+            response = await llm_service.generate_simple_response(
+                message=prompt,
+                context={},
+                chat_history=[]
+            )
+            
+            try:
+                return json.loads(response)
+            except json.JSONDecodeError:
+                return {"query": user_message, "use_github": False}
+        except Exception as e:
+            # Fallback if LLM fails
             return {"query": user_message, "use_github": False}
 
     async def _extract_file_info(self, user_message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Extract file information from user message"""
         
-        prompt = f"""Extract file information from this request:
+        try:
+            prompt = f"""Extract file information from this request:
 
 {user_message}
 
@@ -325,19 +345,26 @@ Context: {json.dumps(context, indent=2) if context else "None"}
 Respond in JSON format with these fields:
 - file_path: path to the file (if mentioned)
 - code_snippet: code snippet (if provided in message)"""
-
-        messages = [{"role": "user", "content": prompt}]
-        response = await self.call_llm(messages, temperature=0.3)
-        
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError:
+            
+            response = await llm_service.generate_simple_response(
+                message=prompt,
+                context=context,
+                chat_history=[]
+            )
+            
+            try:
+                return json.loads(response)
+            except json.JSONDecodeError:
+                return {}
+        except Exception as e:
+            # Fallback if LLM fails
             return {}
 
     async def _extract_pr_info(self, user_message: str) -> Dict[str, Any]:
         """Extract PR information from user message"""
         
-        prompt = f"""Extract pull request information from this request:
+        try:
+            prompt = f"""Extract pull request information from this request:
 
 {user_message}
 
@@ -345,19 +372,26 @@ Respond in JSON format with these fields:
 - owner: repository owner
 - repo: repository name
 - pr_number: pull request number"""
-
-        messages = [{"role": "user", "content": prompt}]
-        response = await self.call_llm(messages, temperature=0.3)
-        
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError:
+            
+            response = await llm_service.generate_simple_response(
+                message=prompt,
+                context={},
+                chat_history=[]
+            )
+            
+            try:
+                return json.loads(response)
+            except json.JSONDecodeError:
+                return {}
+        except Exception as e:
+            # Fallback if LLM fails
             return {}
 
     async def _extract_error_info(self, user_message: str) -> Dict[str, Any]:
         """Extract error information from user message"""
         
-        prompt = f"""Extract error information from this request:
+        try:
+            prompt = f"""Extract error information from this request:
 
 {user_message}
 
@@ -366,13 +400,19 @@ Respond in JSON format with these fields:
 - stack_trace: stack trace (if provided)
 - code_context: relevant code context (if provided)
 - environment: environment details (if provided)"""
-
-        messages = [{"role": "user", "content": prompt}]
-        response = await self.call_llm(messages, temperature=0.3)
-        
-        try:
-            return json.loads(response)
-        except json.JSONDecodeError:
+            
+            response = await llm_service.generate_simple_response(
+                message=prompt,
+                context={},
+                chat_history=[]
+            )
+            
+            try:
+                return json.loads(response)
+            except json.JSONDecodeError:
+                return {}
+        except Exception as e:
+            # Fallback if LLM fails
             return {}
 
     async def _summarize_search_results(self, user_message: str, results: Dict[str, Any]) -> str:
