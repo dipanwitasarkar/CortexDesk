@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap, DatabaseZap } from 'lucide-react'
+import { Activity, Cpu, HardDrive, MemoryStick, AlertCircle, CheckCircle, RefreshCw, Database, Server, FileText, Zap, DatabaseZap, Filter, X } from 'lucide-react'
+import { useToast } from './ToastContainer'
 
 interface PerformanceData {
   timestamp: string
@@ -94,8 +95,13 @@ const ObservabilityDashboard: React.FC = () => {
   const [runtimeState, setRuntimeState] = useState<any>(null)
   const [qdrant, setQdrant] = useState<QdrantData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [refreshInterval, setRefreshInterval] = useState(5)
   const [lastUpdated, setLastUpdated] = useState<string>('')
   const [activeTab, setActiveTab] = useState<TabType>('overview')
+  const [logFilter, setLogFilter] = useState('')
+  const [traceFilter, setTraceFilter] = useState('')
+  const { success, error } = useToast()
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
@@ -157,8 +163,10 @@ const ObservabilityDashboard: React.FC = () => {
       }
       
       setLastUpdated(new Date().toLocaleTimeString())
-    } catch (error) {
-      console.error('Failed to fetch observability data:', error)
+      success('Observability data refreshed successfully')
+    } catch (err) {
+      console.error('Failed to fetch observability data:', err)
+      error('Failed to fetch observability data')
     } finally {
       setLoading(false)
     }
@@ -166,9 +174,17 @@ const ObservabilityDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 30000) // Refresh every 30 seconds
-    return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (autoRefresh) {
+      interval = setInterval(fetchData, refreshInterval * 1000)
+    }
+    return () => {
+      if (interval) clearInterval(interval)
+    }
+  }, [autoRefresh, refreshInterval])
 
   return (
     <div className="p-6 space-y-6">
@@ -179,6 +195,29 @@ const ObservabilityDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold">System Observability</h1>
         </div>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2 text-sm text-gray-400">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                className="rounded"
+              />
+              Auto-refresh
+            </label>
+            {autoRefresh && (
+              <select
+                value={refreshInterval}
+                onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                className="bg-gray-700 text-white text-sm rounded px-2 py-1"
+              >
+                <option value={5}>5s</option>
+                <option value={10}>10s</option>
+                <option value={30}>30s</option>
+                <option value={60}>1m</option>
+              </select>
+            )}
+          </div>
           <span className="text-sm text-gray-400">
             Last updated: {lastUpdated || 'Never'}
           </span>
@@ -362,14 +401,40 @@ const ObservabilityDashboard: React.FC = () => {
           {/* Logs Tab */}
           {activeTab === 'logs' && (
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <div className="flex items-center gap-3 mb-4">
-                <FileText className="w-5 h-5 text-blue-400" />
-                <h2 className="text-lg font-semibold">System Logs</h2>
-                <span className="text-sm text-gray-400">({logs?.count || 0} logs)</span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <FileText className="w-5 h-5 text-blue-400" />
+                  <h2 className="text-lg font-semibold">System Logs</h2>
+                  <span className="text-sm text-gray-400">({logs?.count || 0} logs)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={logFilter}
+                    onChange={(e) => setLogFilter(e.target.value)}
+                    placeholder="Filter logs..."
+                    className="bg-gray-700 text-white text-sm rounded px-3 py-1 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  />
+                  {logFilter && (
+                    <button
+                      onClick={() => setLogFilter('')}
+                      className="p-1 hover:bg-gray-700 rounded"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  )}
+                </div>
               </div>
               {logs && logs.count > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {logs.logs.map((log: any, index: number) => (
+                  {logs.logs
+                    .filter((log: any) => 
+                      !logFilter || 
+                      log.message.toLowerCase().includes(logFilter.toLowerCase()) ||
+                      log.level.toLowerCase().includes(logFilter.toLowerCase())
+                    )
+                    .map((log: any, index: number) => (
                     <div key={index} className="bg-gray-900 rounded p-3 text-sm font-mono">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-xs px-2 py-1 rounded ${
@@ -398,14 +463,40 @@ const ObservabilityDashboard: React.FC = () => {
           {/* Traces Tab */}
           {activeTab === 'traces' && (
             <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-              <div className="flex items-center gap-3 mb-4">
-                <Zap className="w-5 h-5 text-yellow-400" />
-                <h2 className="text-lg font-semibold">Request Traces</h2>
-                <span className="text-sm text-gray-400">({traces?.count || 0} traces)</span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <Zap className="w-5 h-5 text-yellow-400" />
+                  <h2 className="text-lg font-semibold">Request Traces</h2>
+                  <span className="text-sm text-gray-400">({traces?.count || 0} traces)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={traceFilter}
+                    onChange={(e) => setTraceFilter(e.target.value)}
+                    placeholder="Filter traces..."
+                    className="bg-gray-700 text-white text-sm rounded px-3 py-1 border border-gray-600 focus:border-blue-500 focus:outline-none"
+                  />
+                  {traceFilter && (
+                    <button
+                      onClick={() => setTraceFilter('')}
+                      className="p-1 hover:bg-gray-700 rounded"
+                    >
+                      <X className="w-4 h-4 text-gray-400" />
+                    </button>
+                  )}
+                </div>
               </div>
               {traces && traces.count > 0 ? (
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {traces.traces.map((trace: any, index: number) => (
+                  {traces.traces
+                    .filter((trace: any) => 
+                      !traceFilter || 
+                      trace.operation.toLowerCase().includes(traceFilter.toLowerCase()) ||
+                      trace.request_id.toLowerCase().includes(traceFilter.toLowerCase())
+                    )
+                    .map((trace: any, index: number) => (
                     <div key={index} className="bg-gray-900 rounded p-3 text-sm">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-gray-400 text-xs">{trace.timestamp}</span>
