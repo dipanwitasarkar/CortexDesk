@@ -11,6 +11,9 @@ import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plu
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useAccessibility } from './hooks/useAccessibility'
 
+// API URL configuration
+const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8000' : 'http://localhost:8000';
+
 function App() {
   const [chats, setChats] = useState<Chat[]>([])
   const [currentChat, setCurrentChat] = useState<Chat | null>(null)
@@ -29,7 +32,7 @@ function App() {
 
   const loadChats = async () => {
     try {
-      const response = await fetch('/api/v1/chats?user_id=1')
+      const response = await fetch(`${API_BASE_URL}/api/v1/chats?user_id=1`)
       if (response.ok) {
         const data = await response.json()
         setChats(data)
@@ -43,7 +46,7 @@ function App() {
 
   const createNewChat = async () => {
     try {
-      const response = await fetch('/api/v1/chats', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/chats`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: 1, title: 'New conversation' })
