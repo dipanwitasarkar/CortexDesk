@@ -80,3 +80,6 @@ Thumbs.db
 *.tmp
 *.temp
 uploads/
+
+# Tauri
+frontend/src-tauri/target/
