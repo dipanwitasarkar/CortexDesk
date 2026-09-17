@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckCircle, XCircle, Loader2, Play, Square, RefreshCw } from 'lucide-react'
 import { invoke } from '@tauri-apps/api/core'
 

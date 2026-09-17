@@ -1,6 +1,6 @@
 // API utility for centralized API configuration
 
-const API_BASE_URL = import.meta.env.DEV ? 'http://localhost:8000' : 'http://localhost:8000';
+const API_BASE_URL = 'http://localhost:8000';
 
 export const api = {
   get: async (endpoint: string) => {
@@ -41,5 +41,3 @@ export const api = {
     return response;
   }
 };
-
-export const API_BASE_URL as string;

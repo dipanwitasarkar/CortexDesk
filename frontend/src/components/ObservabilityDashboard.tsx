@@ -713,7 +713,7 @@ const ObservabilityDashboard: React.FC = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                       {Object.entries(runtimeState.key_categories).map(([category, count]) => (
                         <div key={category} className="bg-gray-900 rounded p-3">
-                          <div className="text-2xl font-bold text-blue-400">{count}</div>
+                          <div className="text-2xl font-bold text-blue-400">{String(count)}</div>
                           <div className="text-sm text-gray-400 capitalize">{category.replace('_', ' ')}</div>
                         </div>
                       ))}
@@ -728,13 +728,13 @@ const ObservabilityDashboard: React.FC = () => {
                         <div key={category} className="bg-gray-900 rounded p-3 text-sm">
                           <div className="flex justify-between mb-1">
                             <span className="text-gray-300 capitalize">{category.replace('_', ' ')}</span>
-                            <span className="text-gray-400 text-xs">{data.total_keys} keys</span>
+                            <span className="text-gray-400 text-xs">{(data as any).total_keys} keys</span>
                           </div>
                           <div className="text-gray-400 text-xs font-mono break-all">
-                            {data.key}
+                            {(data as any).key}
                           </div>
                           <div className="text-gray-300 text-xs mt-1">
-                            {typeof data.value === 'object' ? JSON.stringify(data.value, null, 2) : String(data.value)}
+                            {typeof (data as any).value === 'object' ? JSON.stringify((data as any).value, null, 2) : String((data as any).value)}
                           </div>
                         </div>
                       ))}

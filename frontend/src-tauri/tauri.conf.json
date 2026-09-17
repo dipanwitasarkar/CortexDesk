@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "CortexDesk",
   "version": "1.0.0",
-  "identifier": "com.cortezdesk.app",
+  "identifier": "com.cortezdesk",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -39,12 +39,6 @@
     ],
     "android": {
       "debugApplicationIdSuffix": ".debug"
-    },
-    "windows": {
-      "webviewInstallMode": "embed",
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": ""
     }
   }
 }

@@ -256,13 +256,13 @@ const MCPManager: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 {integration.status === 'connected' ? (
-                  <CheckCircle className="w-5 h-5 text-green-400" title="Connected" />
+                  <CheckCircle className="w-5 h-5 text-green-400" />
                 ) : integration.status === 'error' ? (
-                  <XCircle className="w-5 h-5 text-red-400" title="Error" />
+                  <XCircle className="w-5 h-5 text-red-400" />
                 ) : integration.status === 'connecting' ? (
-                  <RefreshCw className="w-5 h-5 text-yellow-400 animate-spin" title="Connecting" />
+                  <RefreshCw className="w-5 h-5 text-yellow-400 animate-spin" />
                 ) : (
-                  <RefreshCw className="w-5 h-5 text-gray-400" title="Unknown" />
+                  <RefreshCw className="w-5 h-5 text-gray-400" />
                 )}
               </div>
             </div>
