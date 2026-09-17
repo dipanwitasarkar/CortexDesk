@@ -13,30 +13,13 @@ CortexDesk can be packaged as a cross-platform desktop application using Tauri. 
 - Window settings configured (1200x800, resizable)
 - Tauri API package installed
 - Rust toolchain installed
+- All system dependencies installed
+- Tauri app successfully builds and runs
 
-⚠️ **Requires System Dependencies:**
-The Tauri build requires system-level libraries that need to be installed:
-
-### Linux Dependencies
-```bash
-sudo apt-get update
-sudo apt-get install -y \
-  libwebkit2gtk-4.0-dev \
-  libssl-dev \
-  libgtk-3-dev \
-  libayatana-appindicator3-dev \
-  librsvg2-dev \
-  libsoup-3.0-dev
-```
-
-### macOS Dependencies
-```bash
-brew install openssl@3
-```
-
-### Windows Dependencies
-- Visual Studio C++ Build Tools
-- WebView2 Runtime (usually included with Windows 10+)
+✅ **Working:**
+- Development mode: `npm run tauri:dev`
+- Desktop app launches successfully
+- Cross-platform compatibility configured
 
 ## Development Setup
 
@@ -47,11 +30,14 @@ brew install openssl@3
 sudo apt-get update
 sudo apt-get install -y \
   libwebkit2gtk-4.0-dev \
+  libwebkit2gtk-4.1-dev \
   libssl-dev \
   libgtk-3-dev \
   libayatana-appindicator3-dev \
   librsvg2-dev \
-  libsoup-3.0-dev
+  libsoup-3.0-dev \
+  libjavascriptcoregtk-4.0-dev \
+  libjavascriptcoregtk-4.1-dev
 ```
 
 **macOS:**
@@ -79,7 +65,19 @@ npm install -D @tauri-apps/cli
 
 ### 4. Run Development Mode
 
+**Linux (with display):**
 ```bash
+cd frontend
+npm run tauri:dev
+```
+
+**Linux (headless/remote):**
+```bash
+# Start virtual display
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+export DISPLAY=:99
+
+# Run Tauri
 cd frontend
 npm run tauri:dev
 ```
@@ -179,6 +177,17 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
 - File system integration (platform-specific)
 
 ## Troubleshooting
+
+### GTK Initialization Failed
+
+**Error:** `Failed to initialize GTK`
+**Solution:** Tauri requires a display server. On headless/remote systems, use Xvfb:
+
+```bash
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+export DISPLAY=:99
+npm run tauri:dev
+```
 
 ### Build Fails with Missing Libraries
 
