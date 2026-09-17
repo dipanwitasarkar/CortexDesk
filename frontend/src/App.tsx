@@ -5,6 +5,7 @@ import ObservabilityDashboard from './components/ObservabilityDashboard'
 import DocumentManager from './components/DocumentManager'
 import MCPManager from './components/MCPManager'
 import LLMManager from './components/LLMManager'
+import DockerManager from './components/DockerManager'
 import { ToastProvider } from './components/ToastContainer'
 import { Chat } from './types'
 import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug, Settings } from 'lucide-react'
@@ -24,6 +25,7 @@ function App() {
   const [showMCP, setShowMCP] = useState(false)
   const [showLLM, setShowLLM] = useState(false)
   const [loadingChats, setLoadingChats] = useState(true)
+  const [backendReady, setBackendReady] = useState(true)
 
   useEffect(() => {
     // Load chats from API
@@ -489,6 +491,26 @@ function App() {
       {/* LLM Modal */}
       {showLLM && (
         <LLMManager onClose={() => setShowLLM(false)} />
+      )}
+
+      {/* Docker Manager Modal - Only show in desktop app */}
+      {window.__TAURI__ && !backendReady && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-xl font-semibold">Backend Services</h2>
+              <button
+                onClick={() => {}}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <DockerManager onBackendReady={() => setBackendReady(true)} />
+            </div>
+          </div>
+        </div>
       )}
     </div>
     </ToastProvider>
