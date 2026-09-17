@@ -636,10 +636,9 @@ Internal Use Only
 
 ### Getting Help
 
-- **User Guide**: [USER_GUIDE.md](USER_GUIDE.md)
-- **Quick Start**: [QUICKSTART.md](QUICKSTART.md)
-- **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **API Reference**: [docs/API_REFERENCE.md](docs/API_REFERENCE.md)
+- **Desktop App (Docker)**: [DOCKER_DESKTOP_APP.md](DOCKER_DESKTOP_APP.md)
+- **Desktop App (Tauri)**: [TAURI_DESKTOP_APP.md](TAURI_DESKTOP_APP.md)
+- **Low-Level Design**: [docs/LLD_PART1_ARCHITECTURE.md](docs/LLD_PART1_ARCHITECTURE.md)
 
 ### Reporting Issues
 
