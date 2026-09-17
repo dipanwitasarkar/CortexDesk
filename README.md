@@ -160,49 +160,138 @@ CortexDesk supports multiple LLM providers that you can configure directly from 
 
 ### Prerequisites
 
-- **Windows 10/11**
-- **Python 3.12+**
+**For Web App:**
+- **Python 3.10+**
 - **Node.js 18+**
-- **Podman or Docker** (for local services)
+- **PostgreSQL 15+**
+- **Redis 7+**
+- **Qdrant 1.12+**
+
+**For Desktop App:**
+- **Windows 10/11**
+- **Docker Desktop** (for backend services)
+- Or manual backend setup (PostgreSQL, Redis, Qdrant, Python)
 
 ### Installation
 
-#### Option 1: Desktop Application (Recommended)
-
-1. Download `Windows AI Assistant Setup.exe`
-2. Run the installer
-3. Follow the setup wizard
-4. Configure Dell LLM credentials
-5. Launch from desktop or Start menu
-
-#### Option 2: Development Setup
+#### Option 1: Web Application (Recommended for Testing)
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
-cd windows-ai-assistant
+git clone https://github.com/dipanwitasarkar/CortexDesk.git
+cd CortexDesk
 
-# 2. Start local infrastructure
-cd infrastructure
-podman-compose up -d
-
-# 3. Set up backend
+# 2. Set up backend
 cd backend
 python -m venv venv
 venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/macOS
 pip install -r requirements.txt
 cp .env.example .env
-# Edit .env with your Dell LLM credentials
-python -m uvicorn app.main:app --reload
+# Edit .env with your database credentials
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-# 4. Set up frontend
+# 3. Set up frontend (new terminal)
 cd frontend
 npm install
 npm run dev
 
-# 5. Run Electron app (optional)
-npm run electron:dev
+# 4. Open browser
+# Navigate to http://localhost:5173
 ```
+
+#### Option 2: Desktop Application
+
+**Download:**
+- Windows: Download from GitHub Actions artifacts
+- macOS: Download from GitHub Actions artifacts  
+- Linux: Download from GitHub Actions artifacts
+
+**Setup (Required):**
+The desktop app requires the backend to be running. You have two options:
+
+**Option A: Docker (Recommended)**
+```bash
+# 1. Install Docker Desktop
+# Download from: https://www.docker.com/products/docker-desktop
+
+# 2. Clone repository
+git clone https://github.com/dipanwitasarkar/CortexDesk.git
+cd CortexDesk
+
+# 3. Start backend services
+docker-compose up -d
+
+# 4. Install and launch desktop app
+# Double-click the downloaded installer
+# Launch from Start Menu
+```
+
+**Option B: Manual Backend Setup**
+```bash
+# 1. Install PostgreSQL, Redis, Qdrant manually
+# 2. Setup Python backend
+cd backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with database credentials
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# 3. Install and launch desktop app
+# Double-click the downloaded installer
+# Launch from Start Menu
+```
+
+**Important:** The desktop app connects to the backend at `http://localhost:8000`. Ensure the backend is running before launching the desktop app.
+
+#### Option 3: Development Setup
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/dipanwitasarkar/CortexDesk.git
+cd CortexDesk
+
+# 2. Set up backend
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/macOS
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your database credentials
+python -m uvicorn app.main:app --reload
+
+# 3. Set up frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+
+# 4. Open browser
+# Navigate to http://localhost:5173
+```
+
+### Building Desktop App
+
+```bash
+# Linux
+cd frontend
+npm run tauri:build
+
+# Windows (requires Windows machine)
+cd frontend
+npm run tauri:build
+
+# macOS (requires macOS machine)
+cd frontend
+npm run tauri:build
+```
+
+**Or use GitHub Actions** for automated cross-platform builds:
+- Push to main branch
+- Download artifacts from Actions page
+- Or create a tag for GitHub Release
 
 ### Access Points
 

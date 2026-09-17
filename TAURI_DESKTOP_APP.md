@@ -21,6 +21,25 @@ CortexDesk can be packaged as a cross-platform desktop application using Tauri. 
 - Desktop app launches successfully
 - Cross-platform compatibility configured
 
+## Current Implementation
+
+### What the Desktop App Includes
+- ✅ Frontend (React app)
+- ✅ Tauri desktop wrapper
+- ✅ Native desktop window
+- ✅ Cross-platform builds (Windows, macOS, Linux)
+
+### What the Desktop App Does NOT Include
+- ❌ Backend (Python/FastAPI)
+- ❌ PostgreSQL database
+- ❌ Redis cache
+- ❌ Qdrant vector database
+- ❌ Docker management UI
+- ❌ Automatic backend startup
+
+### How It Works
+The desktop app is a **frontend-only wrapper** that connects to a backend running at `http://localhost:8000`. The backend must be started separately (either via Docker or manual setup).
+
 ## Development Setup
 
 ### 1. Install System Dependencies
@@ -46,8 +65,8 @@ brew install openssl@3
 ```
 
 **Windows:**
-- Install Visual Studio C++ Build Tools
-- WebView2 Runtime is included with Windows 10+
+- Visual Studio C++ Build Tools
+- WebView2 Runtime (included with Windows 10+)
 
 ### 2. Install Rust Toolchain
 
@@ -60,7 +79,7 @@ source "$HOME/.cargo/env"
 
 ```bash
 cd frontend
-npm install -D @tauri-apps/cli
+npm install -D @tauri-apps/cli @tauri-apps/api
 ```
 
 ### 4. Run Development Mode
@@ -102,13 +121,12 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
 
 ## Configuration
 
-### Tauri Configuration (`src-tauri/tauri.conf.json`)
-
+### tauri.conf.json
 ```json
 {
   "productName": "CortexDesk",
   "version": "1.0.0",
-  "identifier": "com.cortezdesk.app",
+  "identifier": "com.cortezdesk",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -127,54 +145,76 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
         "fullscreen": false,
         "center": true
       }
-    ],
-    "security": {
-      "csp": null
-    },
-    "withGlobalTauri": true
-  },
-  "bundle": {
-    "active": true,
-    "targets": "all"
+    ]
   }
 }
 ```
 
-## Platform-Specific Notes
+## Backend Setup (Required)
+
+The desktop app requires the backend to be running. You have two options:
+
+### Option A: Docker (Recommended)
+
+```bash
+# 1. Install Docker Desktop
+# Download from: https://www.docker.com/products/docker-desktop
+
+# 2. Clone repository
+git clone https://github.com/dipanwitasarkar/CortexDesk.git
+cd CortexDesk
+
+# 3. Start backend services
+docker-compose up -d
+
+# 4. Verify services are running
+docker-compose ps
+```
+
+### Option B: Manual Setup
+
+```bash
+# 1. Install PostgreSQL, Redis, Qdrant manually
+
+# 2. Setup backend
+cd backend
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/macOS
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with database credentials
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+## Building for Different Platforms
 
 ### Linux
-- Requires GTK3 and WebKitGTK libraries
-- Produces `.deb` and `.AppImage` installers
-- Supports system tray integration
-- Requires additional system libraries for full functionality
-
-### macOS
-- Requires Xcode command line tools
-- Produces `.dmg` and `.app` bundles
-- Supports code signing (requires Apple Developer account)
-- Native macOS look and feel
+```bash
+cd frontend
+npm run tauri:build
+```
 
 ### Windows
-- Requires Visual Studio C++ Build Tools
-- Produces `.msi` and `.exe` installers
-- WebView2 Runtime included with Windows 10+
-- Native Windows integration (notifications, system tray)
+```cmd
+cd frontend
+npm run tauri:build
+```
 
-## Cross-Platform Features
+### macOS
+```bash
+cd frontend
+npm run tauri:build
+```
 
-### ✅ What Works Cross-Platform:
-- Core React application
-- API communication with backend
-- All UI components
-- Keyboard shortcuts
-- Accessibility features
-- Local storage
+## GitHub Actions
 
-### ⚠️ Platform-Specific Features:
-- Windows Agent (Windows only)
-- System tray integration (platform-specific)
-- Native notifications (platform-specific)
-- File system integration (platform-specific)
+Automated cross-platform builds are configured in `.github/workflows/build-desktop.yml`:
+
+- Triggers on push to main
+- Builds for Windows, macOS, and Linux
+- Uploads artifacts to Actions page
+- Creates GitHub Releases on tags
 
 ## Troubleshooting
 
@@ -191,65 +231,49 @@ npm run tauri:dev
 
 ### Build Fails with Missing Libraries
 
-**Error:** `Package glib-2.0 was not found`
+**Error:** Package not found
 **Solution:** Install system dependencies (see above)
 
-**Error:** `Package javascriptcoregtk-4.1 was not found`
-**Solution:** Install libwebkit2gtk-4.0-dev
+### Backend Connection Failed
 
-### Development Mode Won't Start
-
-**Error:** Vite dev server not starting
-**Solution:** Ensure backend is running on http://localhost:8000
-
-**Error:** Desktop window doesn't open
-**Solution:** Check Tauri logs in terminal for specific error
-
-### Production Build Fails
-
-**Error:** Build fails on specific platform
-**Solution:** Ensure platform-specific dependencies are installed
+**Error:** Desktop app can't connect to backend
+**Solution:**
+- Ensure backend is running at http://localhost:8000
+- Check backend health: `curl http://localhost:8000/health`
+- Verify backend is accessible
 
 ## Current Limitations
 
-1. **System Dependencies:** Tauri requires system-level libraries that vary by platform
-2. **Build Time:** First build takes 5-10 minutes due to Rust compilation
-3. **Bundle Size:** Desktop app is larger than web app (~5-10MB vs web)
-4. **Platform Testing:** Need to test on each target platform
+**Desktop App:**
+- ❌ No automatic backend startup
+- ❌ Backend must be started manually
+- ❌ No embedded databases
+- ❌ No service management UI
 
-## Alternative Approaches
+**Future Enhancements:**
+- ✅ Bundle backend in desktop app (estimated 1-2 months work)
+- ✅ Use embedded databases (SQLite instead of PostgreSQL)
+- ✅ Auto-start backend on app launch
+- ✅ Service management UI
 
-If Tauri setup is too complex, consider:
+## Summary
 
-### Option 1: Electron
-- Easier setup, more documentation
-- Larger bundle size (~100MB+)
-- Better ecosystem support
+**Current State:**
+- Desktop app is a frontend wrapper only
+- Backend must be started separately (Docker or manual)
+- Cross-platform builds available
+- GitHub Actions for automated builds
 
-### Option 2: Keep as Web App
-- No installation required
-- Works in any browser
-- Automatic updates
-- Smaller footprint
+**User Experience:**
+1. Install Docker Desktop (one-time)
+2. Clone repository
+3. Start Docker services
+4. Install desktop app
+5. Launch desktop app
+6. Ready to use
 
-### Option 3: Progressive Web App (PWA)
-- Installable from browser
-- Works offline
-- Cross-platform
-- Smaller than desktop app
-
-## Next Steps
-
-1. Install system dependencies for your platform
-2. Test development mode: `npm run tauri:dev`
-3. Test production build: `npm run tauri:build`
-4. Test on target platforms
-5. Configure code signing for distribution
-6. Set up auto-update mechanism
-
-## Resources
-
-- [Tauri Documentation](https://tauri.app/)
-- [Tauri CLI Reference](https://tauri.app/v1/guides/)
-- [Cross-Platform Development](https://tauri.app/v1/guides/building/cross-platform)
-- [System Requirements](https://tauri.app/v1/guides/getting-started/prerequisites)
+**Platform Agnostic:**
+- ✅ Works on Linux
+- ✅ Works on macOS
+- ✅ Works on Windows
+- ✅ Same codebase for all platforms
