@@ -44,3 +44,51 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts (windows)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: frontend/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+
+      - name: Upload artifacts (windows exe)
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-exe
+          path: frontend/src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+
+      - name: Upload artifacts (macos)
+        if: matrix.platform == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-dmg
+          path: frontend/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+      - name: Upload artifacts (macos app)
+        if: matrix.platform == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-app
+          path: frontend/src-tauri/target/release/bundle/macos/*.app
+          if-no-files-found: error
+
+      - name: Upload artifacts (ubuntu deb)
+        if: matrix.platform == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-deb
+          path: frontend/src-tauri/target/release/bundle/deb/*.deb
+          if-no-files-found: error
+
+      - name: Upload artifacts (ubuntu appimage)
+        if: matrix.platform == 'ubuntu-20.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ubuntu-appimage
+          path: frontend/src-tauri/target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error
