@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Chat } from '../types'
 import { Plus, X, MessageSquare, Clock, Trash2 } from 'lucide-react'
 import { ChatSkeleton } from './SkeletonLoader'
+import { API_BASE_URL } from '../config'
 
 interface SidebarProps {
   chats: Chat[]
@@ -29,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     setDeletingChatId(chatId)
     
     try {
-      const response = await fetch(`/api/v1/chats/${chatId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/chats/${chatId}`, {
         method: 'DELETE'
       })
       

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FileText, Upload, Trash2, Search, Plus, X, CheckCircle, AlertCircle, Clock } from 'lucide-react'
 import { useToast } from './ToastContainer'
 import { DocumentSkeleton } from './SkeletonLoader'
+import { API_BASE_URL } from '../config'
 
 interface Document {
   id: number
@@ -33,7 +34,7 @@ const DocumentManager: React.FC = () => {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch('/api/v1/documents')
+      const response = await fetch(`${API_BASE_URL}/api/v1/documents`)
       if (response.ok) {
         const data = await response.json()
         setDocuments(data)
@@ -74,7 +75,7 @@ const DocumentManager: React.FC = () => {
 
     try {
       const response = await fetch(
-        `/api/v1/documents/text?title=${encodeURIComponent(uploadTitle)}&content=${encodeURIComponent(uploadContent)}`
+        `${API_BASE_URL}/api/v1/documents/text?title=${encodeURIComponent(uploadTitle)}&content=${encodeURIComponent(uploadContent)}`
       )
       if (response.ok) {
         const data = await response.json()
@@ -139,7 +140,7 @@ const DocumentManager: React.FC = () => {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await fetch('/api/v1/documents/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/v1/documents/upload`, {
         method: 'POST',
         body: formData
       })
@@ -169,7 +170,7 @@ const DocumentManager: React.FC = () => {
     if (!confirm('Are you sure you want to delete this document?')) return
 
     try {
-      const response = await fetch(`/api/v1/documents/${documentId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/documents/${documentId}`, {
         method: 'DELETE'
       })
       if (response.ok) {
@@ -193,7 +194,7 @@ const DocumentManager: React.FC = () => {
     setSearching(true)
     try {
       const response = await fetch(
-        `/api/v1/documents/search?query=${encodeURIComponent(searchQuery)}`
+        `${API_BASE_URL}/api/v1/documents/search?query=${encodeURIComponent(searchQuery)}`
       )
       if (response.ok) {
         const data = await response.json()

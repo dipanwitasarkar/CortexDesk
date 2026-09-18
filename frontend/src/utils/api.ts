@@ -1,6 +1,6 @@
 // API utility for centralized API configuration
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://172.40.238.188:8000';
 
 export const api = {
   get: async (endpoint: string) => {

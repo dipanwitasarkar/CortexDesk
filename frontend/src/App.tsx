@@ -10,9 +10,7 @@ import { Chat } from './types'
 import { Activity, MessageSquare, Info, X, Bot, Code, Shield, Cpu, FileText, Plug, Settings } from 'lucide-react'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useAccessibility } from './hooks/useAccessibility'
-
-// API URL configuration
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from './config'
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([])
