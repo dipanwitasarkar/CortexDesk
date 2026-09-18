@@ -174,22 +174,29 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
 
 ### API Configuration
 
-The desktop app uses a centralized API configuration file (`frontend/src/config.ts`) with dynamic hostname detection:
+The desktop app uses environment-based configuration via `frontend/src/config.ts`:
 
 ```typescript
 // API Configuration
-// Automatically detect if we're running in a browser vs desktop app
-export const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
+// For development, use localhost. For production, this should be configured via environment variables.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 ```
 
-**How it works:**
-- **Web app (localhost):** Uses `http://localhost:8000`
-- **Desktop app (network IP):** Uses `http://<network-ip>:8000`
-- **Both work simultaneously** without configuration changes
+**Configuration:**
+- **Default:** Uses `http://localhost:8000` for local development
+- **Custom:** Set `VITE_API_BASE_URL` in `frontend/.env` for different environments
+- **Example:** `VITE_API_BASE_URL=http://your-server-ip:8000`
 
-**No manual configuration needed** - the app automatically detects the hostname and uses the appropriate API URL.
+**Setup:**
+1. Copy `frontend/.env.example` to `frontend/.env`
+2. Configure `VITE_API_BASE_URL` for your environment
+3. Rebuild the desktop app: `npm run tauri:build`
+
+**Backend CORS:**
+Configure allowed origins in `backend/.env`:
+```env
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://your-server-ip:5173
+```
 
 All frontend components use this centralized configuration instead of hardcoded URLs.
 

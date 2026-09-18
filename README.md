@@ -261,7 +261,7 @@ websockify --web=/usr/share/novnc 6080 localhost:5901 &
 # Enter VNC password
 ```
 
-**Important:** The desktop app automatically detects the hostname and connects to the appropriate backend URL. Both the web app and desktop app can work simultaneously without configuration changes. The backend must be running at `http://0.0.0.0:8000` to support both access methods.
+**Important:** The application uses environment-based configuration. For local development, it defaults to `localhost:8000`. For remote access or different environments, configure the `VITE_API_BASE_URL` environment variable in `frontend/.env`. The backend CORS configuration can be customized via the `ALLOWED_ORIGINS` environment variable in `backend/.env`.
 
 #### Option 3: Development Setup
 
@@ -474,6 +474,7 @@ Storage Layers:
 
 ### Environment Variables
 
+**Backend Configuration:**
 Create `.env` file in backend directory:
 
 ```env
@@ -512,7 +513,20 @@ SECRET_KEY=your-secret-key
 DEBUG=True
 APP_NAME=CortexDesk
 APP_VERSION=1.0.0
-CORS_ORIGINS=http://localhost:5173,http://localhost:3000
+
+# CORS Configuration (configure for your environment)
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173
+```
+
+**Frontend Configuration:**
+Create `.env` file in frontend directory (copy from `.env.example`):
+
+```env
+# API Configuration
+# For local development: http://localhost:8000
+# For remote access: http://<your-server-ip>:8000
+# For production: https://<your-domain>/api
+VITE_API_BASE_URL=http://localhost:8000
 ```
 
 ### Redis Configuration
