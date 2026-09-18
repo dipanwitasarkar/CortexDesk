@@ -151,7 +151,7 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
   "identifier": "com.cortezdesk",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://172.40.238.188:5173",
+    "devUrl": "http://localhost:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
@@ -178,12 +178,14 @@ The desktop app uses a centralized API configuration file (`frontend/src/config.
 
 ```typescript
 // API Configuration
-export const API_BASE_URL = 'http://172.40.238.188:8000';
+export const API_BASE_URL = 'http://localhost:8000';
 ```
 
-**For local development:** Change to `http://localhost:8000`
-**For VNC access:** Use the network IP address
+**For local development:** Use `http://localhost:8000` (default)
+**For VNC access:** Use development mode (`npm run tauri:dev`) which uses the dev server
 **For production:** Update to your backend URL
+
+**Important:** The web app uses `localhost:8000` by default. For VNC access, use the development mode which automatically handles network compatibility.
 
 All frontend components use this centralized configuration instead of hardcoded URLs.
 
