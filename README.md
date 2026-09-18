@@ -244,7 +244,24 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 # Launch from Start Menu
 ```
 
-**Important:** The desktop app connects to the backend at `http://localhost:8000`. Ensure the backend is running before launching the desktop app.
+**Option C: VNC Access (for remote SSH)**
+```bash
+# 1. Set up VNC server on the Linux VM
+sudo apt-get install -y tightvncserver xfce4 xfce4-goodies
+vncserver :1 -geometry 1920x1080 -depth 24
+
+# 2. Set VNC password
+# (you'll be prompted to set a password)
+
+# 3. Start websockify for browser access
+websockify --web=/usr/share/novnc 6080 localhost:5901 &
+
+# 4. Access from browser
+# Navigate to: http://<vm-ip>:6080/vnc.html
+# Enter VNC password
+```
+
+**Important:** The desktop app connects to the backend at `http://localhost:8000`. Ensure the backend is running before launching the desktop app. For VNC access, the desktop app uses the development server for network compatibility.
 
 #### Option 3: Development Setup
 

@@ -101,6 +101,28 @@ cd frontend
 npm run tauri:dev
 ```
 
+**Linux (VNC Access for Remote SSH):**
+```bash
+# 1. Set up VNC server
+sudo apt-get install -y tightvncserver xfce4 xfce4-goodies
+vncserver :1 -geometry 1920x1080 -depth 24
+
+# 2. Set VNC password (you'll be prompted)
+
+# 3. Start websockify for browser access
+sudo apt-get install -y websockify novnc
+websockify --web=/usr/share/novnc 6080 localhost:5901 &
+
+# 4. Access from browser
+# Navigate to: http://<vm-ip>:6080/vnc.html
+# Enter VNC password
+
+# 5. Run Tauri in VNC session
+cd frontend
+export DISPLAY=:1
+npm run tauri:dev
+```
+
 This will:
 - Start the Vite dev server (http://localhost:5173)
 - Build the Tauri desktop app
@@ -129,7 +151,7 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
   "identifier": "com.cortezdesk",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://172.40.238.188:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
@@ -149,6 +171,21 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
   }
 }
 ```
+
+### API Configuration
+
+The desktop app uses a centralized API configuration file (`frontend/src/config.ts`):
+
+```typescript
+// API Configuration
+export const API_BASE_URL = 'http://172.40.238.188:8000';
+```
+
+**For local development:** Change to `http://localhost:8000`
+**For VNC access:** Use the network IP address
+**For production:** Update to your backend URL
+
+All frontend components use this centralized configuration instead of hardcoded URLs.
 
 ## Backend Setup (Required)
 
