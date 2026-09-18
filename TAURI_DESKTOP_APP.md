@@ -174,18 +174,22 @@ This will create platform-specific installers in `src-tauri/target/release/bundl
 
 ### API Configuration
 
-The desktop app uses a centralized API configuration file (`frontend/src/config.ts`):
+The desktop app uses a centralized API configuration file (`frontend/src/config.ts`) with dynamic hostname detection:
 
 ```typescript
 // API Configuration
-export const API_BASE_URL = 'http://localhost:8000';
+// Automatically detect if we're running in a browser vs desktop app
+export const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:8000'
+  : `http://${window.location.hostname}:8000`;
 ```
 
-**For local development:** Use `http://localhost:8000` (default)
-**For VNC access:** Use development mode (`npm run tauri:dev`) which uses the dev server
-**For production:** Update to your backend URL
+**How it works:**
+- **Web app (localhost):** Uses `http://localhost:8000`
+- **Desktop app (network IP):** Uses `http://<network-ip>:8000`
+- **Both work simultaneously** without configuration changes
 
-**Important:** The web app uses `localhost:8000` by default. For VNC access, use the development mode which automatically handles network compatibility.
+**No manual configuration needed** - the app automatically detects the hostname and uses the appropriate API URL.
 
 All frontend components use this centralized configuration instead of hardcoded URLs.
 

@@ -261,7 +261,7 @@ websockify --web=/usr/share/novnc 6080 localhost:5901 &
 # Enter VNC password
 ```
 
-**Important:** The desktop app connects to the backend at `http://localhost:8000`. Ensure the backend is running before launching the desktop app. For VNC access, use the development mode (`npm run tauri:dev`) which automatically handles network compatibility.
+**Important:** The desktop app automatically detects the hostname and connects to the appropriate backend URL. Both the web app and desktop app can work simultaneously without configuration changes. The backend must be running at `http://0.0.0.0:8000` to support both access methods.
 
 #### Option 3: Development Setup
 
