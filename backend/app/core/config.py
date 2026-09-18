@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     # CORS Configuration
     frontend_url: str = "http://localhost:3000"
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173"
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"  # Configure via ALLOWED_ORIGINS env var
 
     # File Upload Configuration
     max_upload_size: int = 10485760  # 10MB

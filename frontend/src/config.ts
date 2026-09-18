@@ -1,5 +1,3 @@
 // API Configuration
-// Automatically detect if we're running in a browser vs desktop app
-export const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:8000'
-  : `http://${window.location.hostname}:8000`;
+// For development, use localhost. For production, this should be configured via environment variables.
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
